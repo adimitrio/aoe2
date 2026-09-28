@@ -202,7 +202,9 @@
     const h = Math.round(min / 60);
     if (h < 48) return `hace ${h} h`;
     const days = Math.round(h / 24);
-    return days < 60 ? `hace ${days} días` : `hace ${Math.round(days / 30)} meses`;
+    if (days < 60) return `hace ${days} días`;
+    const months = Math.round(days / 30);
+    return months < 24 ? `hace ${months} meses` : `hace ${Math.round(days / 365)} años`;
   }
   const stillRunning = m => !m.finished && !m.abandoned && (Date.now() - new Date(m.started)) < 3 * 3600e3;
 
@@ -433,7 +435,7 @@
   const clan = {
     tag: new URLSearchParams(location.search).get('clan') || store('aoe2-clan') || DEFAULT_CLAN,
     members: [], lb1: new Map(), lbt: new Map(), ongoing: new Map(),
-    loaded: false, loading: false, error: null, sort: 'r1',
+    loaded: false, loading: false, error: null, sort: 'status',
     socket: null, socketKey: '', socketUp: false, retryTimer: null, delay: 2000,
   };
   const EYE = '<svg class="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
