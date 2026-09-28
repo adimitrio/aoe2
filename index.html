@@ -36,6 +36,8 @@
   form{display:flex;gap:8px;align-items:center}
   label{color:var(--ash);font-size:15px}
   input{background:var(--stone-2);border:1px solid var(--line);color:var(--bone);font:inherit;padding:6px 10px;border-radius:6px;width:9em}
+  #pid{width:13em}
+  input::placeholder{color:var(--ash)}
   button{background:var(--gold);color:#221c0c;border:0;font:700 15px var(--body);padding:8px 14px;border-radius:6px;cursor:pointer}
 
   .scene{margin-top:22px}
@@ -78,6 +80,14 @@
   .note{background:var(--stone-2);border-radius:10px;padding:20px 22px;max-width:70ch}
   .note h2{font:800 24px/1.2 var(--display);margin:0 0 8px}
   .note p{margin:6px 0;color:var(--ash)}
+  .picklist{list-style:none;margin:12px 0 4px;padding:0;display:flex;flex-direction:column;gap:2px}
+  .picklist button{all:unset;box-sizing:border-box;width:100%;cursor:pointer;display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 10px;padding:8px 10px;border-radius:6px;color:var(--bone)}
+  .picklist button:hover{background:var(--stone)}
+  .picklist button:focus-visible{outline:2px solid var(--gold)}
+  .picklist strong{font-weight:700}
+  .picklist .meta{color:var(--ash);font-size:14px}
+  .linkbtn{all:unset;cursor:pointer;color:var(--gold);text-decoration:underline;font-size:15px}
+  .linkbtn:focus-visible{outline:2px solid var(--gold)}
   code{background:var(--stone);padding:1px 6px;border-radius:4px;color:var(--bone)}
 
   .clanhead{display:flex;align-items:baseline;justify-content:space-between;gap:6px 20px;flex-wrap:wrap}
@@ -137,9 +147,9 @@
       <div class="status" role="status"><span class="dot" id="dot"></span><span id="statusText">Conectando…</span></div>
     </div>
     <form id="who">
-      <label for="pid">Profile ID</label>
-      <input id="pid" inputmode="numeric" autocomplete="off">
-      <button type="submit">Seguir</button>
+      <label for="pid">Jugador</label>
+      <input id="pid" autocomplete="off" spellcheck="false" placeholder="Nombre o profile ID">
+      <button type="submit">Ver</button>
     </form>
     <form id="clanForm" hidden>
       <label for="tag">Clan</label>
@@ -299,7 +309,9 @@
     return `<div><span class="swatch" style="--pc:${esc(color(p) || '')}"></span><strong>${esc(p.name)}</strong> <span class="pid">(${esc(p.profileId)})</span>, RM 1v1 ${d?.rating ?? (d?.none ? '—' : '…')}, ${esc(p.civName || p.civ || '?')}</div>`;
   };
 
+  let picking = false; // mostrando resultados de búsqueda
   function render(m, live, src) {
+    if (picking) return;
     const isNew = !current || current.match.matchId !== m.matchId || (live && !current.live);
     current = { match: m, live, src };
     const { me, allies, rivals } = split(m);
@@ -348,6 +360,7 @@
 
   // ---------- REST: última partida (y respaldo si el websocket falla) ----------
   async function loadLast() {
+    if (picking) return;
     try {
       const url = `${API}/matches?profile_ids=${encodeURIComponent(profileId)}&use_enums=true&page=1&per_page=1&language=${LANG}`;
       const r = await fetch(url);
@@ -416,6 +429,7 @@
 
   // ---------- perfil ----------
   function follow(id) {
+    picking = false;
     profileId = String(id).trim();
     store('aoe2-profile-id', profileId);
     $('#pid').value = profileId;
@@ -427,8 +441,57 @@
   }
   $('#who').addEventListener('submit', e => {
     e.preventDefault();
-    const v = $('#pid').value.replace(/\D/g, '');
-    if (v) follow(v);
+    const v = $('#pid').value.trim();
+    if (!v) return;
+    if (/^\d+$/.test(v)) follow(v);
+    else searchPlayers(v);
+  });
+
+  // ---------- búsqueda por nombre ----------
+  async function searchPlayers(q) {
+    if (q.length < 3) {
+      picking = true;
+      return showPick(q, null, 'Escribí al menos 3 letras del nombre.');
+    }
+    picking = true;
+    $('#scene').className = 'scene';
+    $('#scene').innerHTML = `<div class="note"><h2>Buscando “${esc(q)}”…</h2></div>`;
+    try {
+      const res = await getJson(`${API}/profiles?search=${encodeURIComponent(q)}&per_page=20&page=1&language=${LANG}`);
+      if (!picking) return; // se eligió otro jugador mientras buscaba
+      const lower = q.toLowerCase();
+      const list = (res.profiles || []).sort((a, b) =>
+        ((String(b.name).toLowerCase() === lower) - (String(a.name).toLowerCase() === lower)) ||
+        ((Number(b.games) || 0) - (Number(a.games) || 0)));
+      if (list.length === 1) return follow(list[0].profileId);
+      showPick(q, list);
+    } catch (e) {
+      if (picking) showPick(q, null, `No pude buscar: ${e.message}.`);
+    }
+  }
+
+  function showPick(q, list, msg) {
+    $('#scene').className = 'scene';
+    const back = '<p><button type="button" class="linkbtn" data-cancel>Volver al jugador anterior</button></p>';
+    if (msg || !list?.length) {
+      $('#scene').innerHTML = `<div class="note"><h2>${list ? `Sin resultados para “${esc(q)}”` : 'Búsqueda'}</h2><p>${esc(msg || 'Probá con otra parte del nombre o con el profile ID.')}</p>${back}</div>`;
+      return;
+    }
+    $('#scene').innerHTML = `<div class="note">
+      <h2>Resultados para “${esc(q)}”</h2>
+      <p>Elegí el jugador a seguir.</p>
+      <ul class="picklist">${list.map(p => `<li><button type="button" data-pick="${esc(p.profileId)}">
+        ${flagImg((p.country || '').toLowerCase())}<strong>${esc(p.name)}</strong><span class="pid">(${esc(p.profileId)})</span>
+        <span class="meta">${p.games != null ? `${Number(p.games)} partidas` : 'sin partidas'}${p.clan ? `, clan ${esc(p.clan)}` : ''}</span>
+      </button></li>`).join('')}</ul>
+      ${back}
+    </div>`;
+  }
+
+  $('#scene').addEventListener('click', e => {
+    const pick = e.target.closest('[data-pick]');
+    if (pick) return follow(pick.dataset.pick);
+    if (e.target.closest('[data-cancel]')) follow(profileId);
   });
 
   // ---------- CLAN ----------

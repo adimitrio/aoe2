@@ -27,7 +27,7 @@ Muestra en tiempo real contra quién estás jugando en **Age of Empires II: Defi
 ## Uso
 
 1. Abrí la página.
-2. Escribí tu Profile ID en el campo de arriba y tocá **Seguir**, o pasalo directo en la URL con `?id=TU_ID`.
+2. En el campo **Jugador** escribí el nombre o el profile ID y tocá **Ver**. Si el nombre coincide con varios jugadores, aparece una lista para elegir. También se puede pasar el ID directo en la URL con `?id=PROFILE_ID`.
 3. Dejala abierta: cuando arranca una partida, la pantalla se actualiza sola.
 
 El Profile ID se guarda en tu navegador, así que la próxima vez ya aparece cargado.
@@ -45,6 +45,7 @@ Es un único `index.html`, sin dependencias ni backend. Todas las consultas las 
 | Partidas en curso | `wss://socket.aoe2companion.com/listen?handler=ongoing-matches&profile_ids=…` | En tiempo real (WebSocket) |
 | Última partida | `GET https://data.aoe2companion.com/api/matches?profile_ids=…&per_page=1` | Al abrir y cada 30 s como respaldo |
 | ELO de RM 1v1 | `GET https://data.aoe2companion.com/api/profiles/{id}` | Por jugador, con caché de 10 min |
+| Búsqueda por nombre | `GET https://data.aoe2companion.com/api/profiles?search=NOMBRE` | Al buscar un jugador por nombre |
 | Integrantes de un clan | `GET https://data.aoe2companion.com/api/profiles?clan=TAG` | Al abrir la sección Clan y cada 5 min |
 | ELO del clan | `GET https://data.aoe2companion.com/api/leaderboards/rm_1v1?clan=TAG` (y `rm_team`) | Al abrir la sección Clan y cada 5 min |
 | Partidas en curso del clan | El mismo WebSocket, con todos los profile IDs del clan | En tiempo real |
