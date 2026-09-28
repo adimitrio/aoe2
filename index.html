@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rival AoE2</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@700;800&family=Alegreya+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --stone:#232B35; --stone-2:#2C3643; --line:#3A4654;
+    --bone:#ECE6D8; --ash:#9BA5B0; --gold:#D4AF52; --win:#6FBF73; --loss:#E0685C;
+    --display:"Alegreya SC", Georgia, "Times New Roman", serif;
+    --body:"Alegreya Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%}
+  body{background:var(--stone);color:var(--bone);font:17px/1.45 var(--body)}
+  .wrap{max-width:960px;margin:0 auto;padding:18px 24px 40px}
+  a{color:var(--gold)}
+  :focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+  .bar{display:flex;align-items:center;justify-content:space-between;gap:12px 20px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid var(--line)}
+  .status{display:flex;align-items:center;gap:8px;color:var(--ash);font-size:15px}
+  .dot{width:10px;height:10px;border-radius:50%;background:var(--ash);flex:none}
+  .dot.live{background:var(--win);animation:pulse 2s infinite}
+  .dot.off{background:var(--loss)}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(111,191,115,.55)}70%,100%{box-shadow:0 0 0 8px rgba(111,191,115,0)}}
+  form{display:flex;gap:8px;align-items:center}
+  label{color:var(--ash);font-size:15px}
+  input{background:var(--stone-2);border:1px solid var(--line);color:var(--bone);font:inherit;padding:6px 10px;border-radius:6px;width:9em}
+  button{background:var(--gold);color:#221c0c;border:0;font:700 15px var(--body);padding:8px 14px;border-radius:6px;cursor:pointer}
+
+  .scene{margin-top:22px}
+  .state{display:inline-block;font-weight:700;font-size:14px;padding:3px 10px;border-radius:999px;margin-bottom:14px}
+  .state.live{background:rgba(111,191,115,.16);color:var(--win)}
+  .state.past{background:var(--stone-2);color:var(--ash)}
+
+  .head{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center}
+  .mapimg{width:64px;height:64px;object-fit:cover;border-radius:8px;background:var(--stone-2)}
+  .mapname{font:800 28px/1.1 var(--display);margin:0}
+  .modes{display:flex;gap:4px 16px;flex-wrap:wrap;color:var(--ash);font-size:15px;margin-top:2px}
+  .clock{text-align:right}
+  .clock b{display:block;font:700 30px/1 var(--body);font-variant-numeric:tabular-nums}
+  .clock span{color:var(--ash);font-size:14px}
+
+  .rivals{display:grid;gap:8px;margin-top:18px}
+  .rival{display:grid;grid-template-columns:6px 1fr;background:var(--stone-2);border-radius:8px;overflow:hidden}
+  .band{background:var(--pc,var(--gold))}
+  .inner{display:grid;grid-template-columns:40px 1fr auto;column-gap:14px;row-gap:1px;align-items:center;padding:10px 16px}
+  .civimg{grid-row:1/span 2;width:40px;height:40px}
+  .rival h1{font:800 26px/1.15 var(--display);margin:0;overflow-wrap:anywhere;min-width:0}
+  .rivals.solo h1{font-size:34px}
+  .elo{font:700 30px/1 var(--body);font-variant-numeric:tabular-nums;text-align:right}
+  .rivals.solo .elo{font-size:38px}
+  .elo small{font-size:13px;font-weight:500;color:var(--ash);margin-right:6px}
+  .meta{display:flex;gap:2px 16px;flex-wrap:wrap;color:var(--ash);font-size:14px;min-width:0}
+  .meta .civname{color:var(--bone);font-weight:500}
+  .diff{font-size:14px;text-align:right;color:var(--ash);white-space:nowrap}
+  .flag{height:12px;vertical-align:-1px;margin-right:5px;border-radius:2px}
+  .up{color:var(--loss)} .down{color:var(--win)}
+  .pid{font:400 13px var(--body);color:var(--ash);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+  .side{margin-top:22px;padding-top:14px;border-top:1px solid var(--line);color:var(--ash);font-size:15px;display:flex;flex-direction:column;gap:6px}
+  .side strong{color:var(--bone);font-weight:500}
+  .swatch{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--pc,var(--ash));margin-right:7px}
+  .result{font-weight:700}
+  .result.win{color:var(--win)} .result.loss{color:var(--loss)}
+
+  .past .rival{opacity:.82}
+  .note{background:var(--stone-2);border-radius:10px;padding:20px 22px;max-width:70ch}
+  .note h2{font:800 24px/1.2 var(--display);margin:0 0 8px}
+  .note p{margin:6px 0;color:var(--ash)}
+  code{background:var(--stone);padding:1px 6px;border-radius:4px;color:var(--bone)}
+
+  .enter{animation:enter .45s ease-out}
+  @keyframes enter{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.dot.live,.enter{animation:none}}
+  @media (max-width:560px){
+    .wrap{padding:14px 16px 32px}
+    .head{grid-template-columns:auto 1fr}
+    .clock{grid-column:1/-1;text-align:left}
+    .inner{grid-template-columns:32px 1fr auto;column-gap:10px;padding:10px 12px}
+    .civimg{width:32px;height:32px}
+    .rival h1,.rivals.solo h1{font-size:22px}
+    .diff{grid-column:2/-1;grid-row:2;text-align:left}
+    .meta{grid-column:2/-1;gap:0 12px;font-size:13px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="bar">
+    <div class="status" role="status"><span class="dot" id="dot"></span><span id="statusText">Conectando…</span></div>
+    <form id="who">
+      <label for="pid">Profile ID</label>
+      <input id="pid" inputmode="numeric" autocomplete="off">
+      <button type="submit">Seguir</button>
+    </form>
+  </header>
+  <main class="scene" id="scene"><div class="note"><h2>Buscando tu partida…</h2></div></main>
+</div>
+
+<script>
+(() => {
+  const API = 'https://data.aoe2companion.com/api';
+  const WS  = 'wss://socket.aoe2companion.com/listen';
+  const LANG = 'es';
+  const DEFAULT_ID = '19007246';
+  const POLL_MS = 30000;
+  const AOE_COLORS = {1:'#405BFF',2:'#FF0000',3:'#00FF00',4:'#FFFF00',5:'#00FFFF',6:'#FF57B3',7:'#797979',8:'#FF9600'};
+
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  // La API puede devolver snake_case o camelCase: normalizamos todo a camelCase.
+  const camel = o => Array.isArray(o) ? o.map(camel)
+    : (o && typeof o === 'object') ? Object.fromEntries(Object.entries(o).map(([k, v]) => [k.replace(/_([a-z0-9])/g, (_, c) => c.toUpperCase()), camel(v)]))
+    : o;
+  const store = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch { return null; } };
+
+  let profileId = new URLSearchParams(location.search).get('id') || store('aoe2-profile-id') || DEFAULT_ID;
+  let socket, reconnectTimer, reconnectDelay = 2000, wsUp = false;
+  const ongoing = new Map();
+  let current = null; // { match, live, src }
+
+  // ---------- helpers ----------
+  const players = m => m.players ? m.players
+    : (m.teams || []).flatMap(t => (t.players || []).map(p => ({ ...p, team: p.team ?? t.teamId })));
+  const isMe = p => String(p.profileId) === String(profileId);
+  const color = p => p.colorHex || AOE_COLORS[p.color] || null;
+
+  function split(m) {
+    const all = players(m);
+    const me = all.find(isMe);
+    const t = me?.team;
+    const teams = t != null && t >= 0;
+    const allies = teams ? all.filter(p => p !== me && p.team === t) : [];
+    const rivals = all.filter(p => p !== me && !allies.includes(p));
+    return { me, allies, rivals };
+  }
+
+  function clock(ms) {
+    const s = Math.max(0, Math.floor(ms / 1000));
+    const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), ss = s % 60;
+    return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(ss).padStart(2, '0');
+  }
+  function ago(d) {
+    const min = Math.round((Date.now() - new Date(d)) / 60000);
+    if (min < 1) return 'recién';
+    if (min < 60) return `hace ${min} min`;
+    const h = Math.round(min / 60);
+    if (h < 48) return `hace ${h} h`;
+    return `hace ${Math.round(h / 24)} días`;
+  }
+  const stillRunning = m => !m.finished && !m.abandoned && (Date.now() - new Date(m.started)) < 3 * 3600e3;
+
+  function setStatus(kind) {
+    $('#dot').className = 'dot ' + (kind === 'live' ? 'live' : kind === 'off' ? 'off' : '');
+    $('#statusText').textContent =
+      kind === 'live' ? 'En vivo' :
+      kind === 'off'  ? `Sin conexión en vivo, consultando cada ${POLL_MS / 1000} s` :
+                        'Conectando…';
+  }
+
+  // ---------- ELO de RM 1v1 (se busca en el perfil de cada jugador) ----------
+  const profiles = new Map(); // profileId -> { at, data, loading }
+  const PROFILE_TTL = 10 * 60e3;
+  const isRm1v1 = l => ['rm_1v1', 3, '3'].includes(l.leaderboardId) || /^rm 1v1$/i.test(l.abbreviation || '');
+  const rm1v1 = id => profiles.get(String(id))?.data;
+
+  function loadProfiles(ids) {
+    const need = ids.filter(id => {
+      const c = profiles.get(String(id));
+      return !c || (!c.loading && Date.now() - c.at > PROFILE_TTL);
+    });
+    if (!need.length) return;
+    Promise.allSettled(need.map(id => {
+      const entry = { at: Date.now(), data: rm1v1(id), loading: true };
+      profiles.set(String(id), entry);
+      return fetch(`${API}/profiles/${encodeURIComponent(id)}?language=${LANG}&exclude=ratings`)
+        .then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))
+        .then(j => {
+          const lb = (camel(j).leaderboards || []).find(isRm1v1);
+          entry.data = lb ? { rating: lb.rating, max: lb.maxRating, wins: lb.wins ?? 0, losses: lb.losses ?? 0, rank: lb.rank, streak: lb.streak }
+                          : { none: true };
+        })
+        .catch(() => { entry.at = Date.now() - PROFILE_TTL + 60e3; }) // si falla, reintenta en 1 min
+        .finally(() => { entry.loading = false; });
+    })).then(() => { if (current) render(current.match, current.live, current.src); });
+  }
+
+  // ---------- render ----------
+  const is1v1Match = m => m.leaderboardId === 'rm_1v1' || m.leaderboardId === 3;
+
+  function rivalCard(p, me, m) {
+    const d = rm1v1(p.profileId), mine = me && rm1v1(me.profileId);
+    const elo = d?.rating ?? (d?.none ? '—' : '…');
+    let diffTxt = d?.none ? 'sin RM 1v1' : 'RM 1v1';
+    if (d?.rating != null && mine?.rating != null) {
+      const diff = d.rating - mine.rating;
+      diffTxt = diff > 0 ? `<span class="up">te lleva ${diff}</span>` : diff < 0 ? `<span class="down">${-diff} debajo tuyo</span>` : 'mismo ELO';
+    }
+    const games = d ? (d.wins + d.losses) : 0;
+    const cc = (p.country || '').toLowerCase();
+    const pc = color(p);
+    return `
+      <article class="rival" ${pc ? `style="--pc:${esc(pc)}"` : ''}>
+        <div class="band"></div>
+        <div class="inner">
+          ${p.civImageUrl ? `<img class="civimg" src="${esc(p.civImageUrl)}" alt="">` : '<span class="civimg"></span>'}
+          <h1>${esc(p.name || 'Jugador ' + p.profileId)} <span class="pid">(${esc(p.profileId)})</span></h1>
+          <div class="elo"><small>1v1</small>${elo}</div>
+          <div class="meta">
+            <span class="civname">${esc(p.civName || p.civ || '?')}</span>
+            ${cc ? `<span><img class="flag" src="https://flagcdn.com/w40/${esc(cc)}.png" alt="" onerror="this.remove()">${esc(cc.toUpperCase())}</span>` : ''}
+            ${games ? `<span>${Math.round(100 * d.wins / games)}% de ${games} en 1v1</span>` : ''}
+            ${d?.max ? `<span>máx ${d.max}</span>` : ''}
+            ${!is1v1Match(m) && p.rating != null ? `<span>esta partida ${p.rating}</span>` : ''}
+            <a href="https://www.aoe2companion.com/profile/${esc(p.profileId)}" target="_blank" rel="noopener">companion</a>
+            <a href="https://www.aoe2insights.com/user/${esc(p.profileId)}/" target="_blank" rel="noopener">insights</a>
+          </div>
+          <div class="diff">${diffTxt}</div>
+        </div>
+      </article>`;
+  }
+
+  const line = (who, p) => {
+    const d = rm1v1(p.profileId);
+    return `<div><span class="swatch" style="--pc:${esc(color(p) || '')}"></span>${who} <strong>${esc(p.name)}</strong> <span class="pid">(${esc(p.profileId)})</span>, RM 1v1 ${d?.rating ?? (d?.none ? '—' : '…')}, ${esc(p.civName || p.civ || '?')}</div>`;
+  };
+
+  function render(m, live, src) {
+    const isNew = !current || current.match.matchId !== m.matchId || (live && !current.live);
+    current = { match: m, live, src };
+    const { me, allies, rivals } = split(m);
+    loadProfiles(players(m).map(p => p.profileId));
+    const mode = m.leaderboardName || m.gameModeName || 'Partida';
+    let result = '';
+    if (!live && me) result = me.won === true ? '<span class="result win">Ganaste</span>'
+      : me.won === false ? '<span class="result loss">Perdiste</span>' : '<span>Sin resultado todavía</span>';
+
+    $('#scene').className = 'scene ' + (live ? 'live' : 'past');
+    $('#scene').innerHTML = `
+      <span class="state ${live ? 'live' : 'past'}">${live ? 'Jugando ahora' : 'Última partida'}</span>
+      <div class="head">
+        ${m.mapImageUrl ? `<img class="mapimg" src="${esc(m.mapImageUrl)}" alt="">` : '<div class="mapimg"></div>'}
+        <div>
+          <h2 class="mapname">${esc(m.mapName || m.map || 'Mapa desconocido')}</h2>
+          <div class="modes"><span>${esc(mode)}</span>${m.server ? `<span>Servidor ${esc(m.server)}</span>` : ''}${result}</div>
+        </div>
+        <div class="clock">${live
+          ? `<b id="elapsed">${clock(Date.now() - new Date(m.started))}</b><span>desde que arrancó</span>`
+          : `<b>${m.finished ? clock(new Date(m.finished) - new Date(m.started)) : '—'}</b><span>${m.finished ? 'de partida, terminó ' + ago(m.finished) : 'empezó ' + ago(m.started)}</span>`}</div>
+      </div>
+      <div class="rivals ${rivals.length === 1 ? 'solo' : ''} ${isNew && live ? 'enter' : ''}">
+        ${rivals.length ? rivals.map(p => rivalCard(p, me, m)).join('') : '<div class="note"><p>No hay rivales en esta partida.</p></div>'}
+      </div>
+      <div class="side">
+        ${me ? line('Vos:', me) : ''}
+        ${allies.map(p => line('Aliado:', p)).join('')}
+      </div>`;
+
+    document.title = live && rivals.length
+      ? `⚔ ${rivals.map(p => `${p.name} (${rm1v1(p.profileId)?.rating ?? p.rating ?? '?'})`).join(', ')}`
+      : 'Rival AoE2';
+  }
+
+  function renderNote(title, html) {
+    current = null;
+    $('#scene').className = 'scene';
+    $('#scene').innerHTML = `<div class="note"><h2>${title}</h2>${html}</div>`;
+  }
+
+  setInterval(() => {
+    const el = document.getElementById('elapsed');
+    if (el && current?.live) el.textContent = clock(Date.now() - new Date(current.match.started));
+  }, 1000);
+
+  // ---------- REST: última partida (y respaldo si el websocket falla) ----------
+  async function loadLast() {
+    try {
+      const url = `${API}/matches?profile_ids=${encodeURIComponent(profileId)}&use_enums=true&page=1&per_page=1&language=${LANG}`;
+      const r = await fetch(url);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const m = camel(await r.json()).matches?.[0];
+      if (current?.live && current.src === 'ws') return; // el socket manda mientras hay partida en vivo
+      if (!m) return renderNote('Sin partidas', '<p>No hay partidas registradas para ese Profile ID. Revisá el número.</p>');
+      render(m, stillRunning(m), 'rest');
+    } catch (e) {
+      if (!current && window.top !== window.self) return renderNote('Abrilo fuera de esta vista previa',
+        `<p>Esta vista previa bloquea las conexiones a APIs externas.</p>
+         <p>Descargá el archivo <code>aoe2-rival.html</code> y abrilo con doble clic en Chrome, Edge o Firefox.</p>`);
+      if (!current) renderNote('No pude leer la API de aoe2companion',
+        `<p>Detalle: ${esc(e.message)}.</p>
+         <p>Si abriste el archivo con doble clic y el navegador bloquea las consultas, servilo desde un servidor local:
+         en esta carpeta corré <code>php -S localhost:8080</code> y abrí <code>http://localhost:8080/aoe2-rival.html</code>.</p>`);
+    }
+  }
+
+  // ---------- WebSocket: partidas en curso en tiempo real ----------
+  function pickLive() {
+    const mine = [...ongoing.values()].filter(m => players(m).some(isMe))
+      .sort((a, b) => new Date(b.started) - new Date(a.started));
+    if (mine[0]) render(mine[0], true, 'ws');
+  }
+
+  function connect() {
+    clearTimeout(reconnectTimer);
+    if (socket) { socket.onclose = null; socket.close(); }
+    ongoing.clear();
+    wsUp = false;
+    setStatus('connecting');
+    try {
+      socket = new WebSocket(`${WS}?handler=ongoing-matches&profile_ids=${encodeURIComponent(profileId)}&language=${LANG}`);
+    } catch { return retry(); }
+    socket.onopen = () => { wsUp = true; reconnectDelay = 2000; setStatus('live'); };
+    socket.onmessage = ev => {
+      let msg;
+      try { msg = camel(JSON.parse(ev.data)); } catch { return; }
+      if (!Array.isArray(msg)) return; // pong u otros mensajes de control
+      for (const e of msg) {
+        const id = e.data?.matchId;
+        if (id == null) continue;
+        if (e.type === 'matchAdded') ongoing.set(id, e.data);
+        else if (e.type === 'matchUpdated') ongoing.set(id, { ...ongoing.get(id), ...e.data });
+        else if (e.type === 'matchRemoved') {
+          const ended = ongoing.get(id);
+          ongoing.delete(id);
+          if (ended && current?.live && current.match.matchId === id) {
+            render({ ...ended, finished: new Date().toISOString() }, false, 'ws');
+            setTimeout(loadLast, 10000); // damos tiempo a que se registre el resultado
+          }
+        }
+      }
+      pickLive();
+    };
+    socket.onclose = () => { wsUp = false; setStatus('off'); retry(); };
+  }
+  function retry() {
+    setStatus('off');
+    reconnectTimer = setTimeout(connect, reconnectDelay);
+    reconnectDelay = Math.min(reconnectDelay * 2, 60000);
+  }
+
+  setInterval(() => { if (!(current?.live && current.src === 'ws' && wsUp)) loadLast(); }, POLL_MS);
+
+  // ---------- perfil ----------
+  function follow(id) {
+    profileId = String(id).trim();
+    store('aoe2-profile-id', profileId);
+    $('#pid').value = profileId;
+    try { history.replaceState(null, '', '?id=' + encodeURIComponent(profileId)); } catch {}
+    current = null;
+    renderNote('Buscando tu partida…', '');
+    connect();
+    loadLast();
+  }
+  $('#who').addEventListener('submit', e => {
+    e.preventDefault();
+    const v = $('#pid').value.replace(/\D/g, '');
+    if (v) follow(v);
+  });
+
+  follow(profileId);
+})();
+</script>
+</body>
+</html>
