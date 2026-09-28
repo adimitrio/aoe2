@@ -33,6 +33,10 @@
   .tabs{display:flex;gap:3px;background:var(--stone-2);padding:3px;border-radius:8px}
   .tabs a{color:var(--ash);text-decoration:none;font-weight:700;font-size:15px;padding:5px 14px;border-radius:6px}
   .tabs a[aria-current="page"]{background:var(--stone);color:var(--bone)}
+  .bell{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;color:var(--ash);font-size:15px;padding:4px 8px;border-radius:6px}
+  .bell[aria-pressed="true"]{color:var(--gold)}
+  .bell:focus-visible{outline:2px solid var(--gold)}
+  .bell svg{width:16px;height:16px}
   form{display:flex;gap:8px;align-items:center}
   label{color:var(--ash);font-size:15px}
   input{background:var(--stone-2);border:1px solid var(--line);color:var(--bone);font:inherit;padding:6px 10px;border-radius:6px;width:9em}
@@ -145,6 +149,7 @@
         <a href="#clan" data-view="clan">Clan</a>
       </nav>
       <div class="status" role="status"><span class="dot" id="dot"></span><span id="statusText">Conectando…</span></div>
+      <button type="button" class="bell" id="bell" aria-pressed="false" title="Sonar una campanita cuando el jugador seguido arranca una partida"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Aviso</button>
     </div>
     <form id="who">
       <label for="pid">Jugador</label>
@@ -313,6 +318,7 @@
   function render(m, live, src) {
     if (picking) return;
     const isNew = !current || current.match.matchId !== m.matchId || (live && !current.live);
+    if (live && isNew && current) chime(); // arrancó una partida del jugador que ya se estaba mirando
     current = { match: m, live, src };
     const { me, allies, rivals } = split(m);
     loadProfiles(players(m).map(p => p.profileId));
@@ -357,6 +363,37 @@
     const el = document.getElementById('elapsed');
     if (el && current?.live) el.textContent = clock(Date.now() - new Date(current.match.started));
   }, 1000);
+
+  // ---------- aviso con sonido cuando arranca una partida ----------
+  let soundOn = store('aoe2-sound') === '1', audio = null;
+  function chime() {
+    if (!soundOn) return;
+    try {
+      audio = audio || new AudioContext();
+      const asked = Date.now();
+      // Sin un toque previo en la página el navegador no deja sonar; si lo habilita más tarde, ese aviso ya pasó.
+      audio.resume().then(() => {
+        if (Date.now() - asked > 2000) return;
+        const t0 = audio.currentTime;
+        [0, .35].forEach(d => [[880, .25], [2430, .08]].forEach(([f, v]) => { // dos golpes de campana
+          const o = audio.createOscillator(), g = audio.createGain(), t = t0 + d;
+          o.frequency.value = f;
+          g.gain.setValueAtTime(v, t);
+          g.gain.exponentialRampToValueAtTime(.001, t + 1.2);
+          o.connect(g).connect(audio.destination);
+          o.start(t); o.stop(t + 1.2);
+        }));
+      }, () => {});
+    } catch {}
+  }
+  const paintBell = () => $('#bell').setAttribute('aria-pressed', soundOn);
+  $('#bell').addEventListener('click', () => {
+    soundOn = !soundOn;
+    store('aoe2-sound', soundOn ? '1' : '0');
+    paintBell();
+    chime(); // al activarlo suena una vez, así se sabe que anda
+  });
+  paintBell();
 
   // ---------- REST: última partida (y respaldo si el websocket falla) ----------
   async function loadLast() {
