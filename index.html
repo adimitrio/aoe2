@@ -108,7 +108,7 @@
   const API = 'https://data.aoe2companion.com/api';
   const WS  = 'wss://socket.aoe2companion.com/listen';
   const LANG = 'es';
-  const DEFAULT_ID = '19007246';
+  const DEFAULT_ID = '2575121';
   const POLL_MS = 30000;
   const AOE_COLORS = {1:'#405BFF',2:'#FF0000',3:'#00FF00',4:'#FFFF00',5:'#00FFFF',6:'#FF57B3',7:'#797979',8:'#FF9600'};
 
@@ -291,11 +291,11 @@
     } catch (e) {
       if (!current && window.top !== window.self) return renderNote('Abrilo fuera de esta vista previa',
         `<p>Esta vista previa bloquea las conexiones a APIs externas.</p>
-         <p>Descargá el archivo <code>aoe2-rival.html</code> y abrilo con doble clic en Chrome, Edge o Firefox.</p>`);
+         <p>Descargá el archivo y abrilo con doble clic en Chrome, Edge o Firefox.</p>`);
       if (!current) renderNote('No pude leer la API de aoe2companion',
         `<p>Detalle: ${esc(e.message)}.</p>
          <p>Si abriste el archivo con doble clic y el navegador bloquea las consultas, servilo desde un servidor local:
-         en esta carpeta corré <code>php -S localhost:8080</code> y abrí <code>http://localhost:8080/aoe2-rival.html</code>.</p>`);
+         en esta carpeta corré <code>php -S localhost:8080</code> y abrí <code>http://localhost:8080/</code>.</p>`);
     }
   }
 
