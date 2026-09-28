@@ -2,7 +2,7 @@
 
 Muestra en tiempo real contra quién estás jugando en **Age of Empires II: Definitive Edition**, con el ELO de RM 1v1 de cada rival.
 
-**Online:** https://TUUSUARIO.github.io/aoe2/?id=2575121
+**Online:** https://adimitrio.github.io/aoe2/?id=2575121
 
 ## Qué muestra
 
