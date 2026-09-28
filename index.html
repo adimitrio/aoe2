@@ -75,6 +75,9 @@
   .swatch{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--pc,var(--ash));margin-right:7px}
   .result{font-weight:700}
   .result.win{color:var(--win)} .result.loss{color:var(--loss)}
+  .history{margin-top:22px;padding-top:14px;border-top:1px solid var(--line)}
+  .history ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;color:var(--ash);font-size:15px}
+  .history li{display:flex;flex-wrap:wrap;gap:2px 14px}
 
   .past .rival{opacity:.82}
   .note{background:var(--stone-2);border-radius:10px;padding:20px 22px;max-width:70ch}
@@ -340,7 +343,8 @@
       <div class="side">
         ${me ? line(me) : ''}
         ${allies.map(line).join('')}
-      </div>`;
+      </div>
+      ${live ? '' : historyHtml(m)}`;
 
     document.title = live && rivals.length
       ? `⚔ ${rivals.map(p => `${p.name} (${rm1v1(p.profileId)?.rating ?? p.rating ?? '?'})`).join(', ')}`
@@ -366,6 +370,7 @@
       const r = await fetch(url);
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const m = camel(await r.json()).matches?.[0];
+      if (m && !stillRunning(m)) loadHistory(m);
       if (current?.live && current.src === 'ws') return; // el socket manda mientras hay partida en vivo
       if (!m) return renderNote('Sin partidas', '<p>No hay partidas registradas para ese Profile ID. Revisá el número.</p>');
       render(m, stillRunning(m), 'rest');
@@ -378,6 +383,44 @@
          <p>Si abriste el archivo con doble clic y el navegador bloquea las consultas, servilo desde un servidor local:
          en esta carpeta corré <code>php -S localhost:8080</code> y abrí <code>http://localhost:8080/</code>.</p>`);
     }
+  }
+
+  // ---------- historial: partidas anteriores del jugador seguido ----------
+  // Se pide al abrir y cuando termina una partida, no en cada sondeo, para no cargar la API.
+  let hist = { id: null, key: '', matches: [] };
+  async function loadHistory(last) {
+    const id = profileId, key = `${last.matchId}:${last.finished || ''}`;
+    if (hist.id === id && hist.key === key) return;
+    hist = { id, key, matches: hist.id === id ? hist.matches : [] };
+    try {
+      const res = await getJson(`${API}/matches?profile_ids=${encodeURIComponent(id)}&use_enums=true&page=1&per_page=10&language=${LANG}`);
+      if (id !== profileId || hist.key !== key) return; // cambiaron de jugador o ya se pidió uno más nuevo
+      hist.matches = res.matches || [];
+      if (current && !current.live) render(current.match, false, current.src);
+    } catch { if (hist.key === key) hist.key = ''; } // si falla, reintenta con el próximo sondeo
+  }
+
+  function historyHtml(shown) {
+    const rows = hist.id === profileId ? hist.matches.filter(m => m.matchId !== shown.matchId) : [];
+    if (!rows.length) return '';
+    return `
+      <section class="history">
+        <span class="state past">Partidas anteriores</span>
+        <ol>${rows.map(m => {
+          const { me, allies, rivals } = split(m);
+          const vs = rivals.length === 1 ? `vs ${esc(rivals[0].name)} (${esc(rivals[0].civName || '?')})`
+            : allies.length ? `en ${allies.length + 1}v${rivals.length}` : `entre ${rivals.length + 1} jugadores`;
+          const diff = Number(me?.ratingDiff);
+          return `<li>
+            ${me?.won === true ? '<span class="result win">Victoria</span>' : me?.won === false ? '<span class="result loss">Derrota</span>' : '<span>Sin resultado</span>'}
+            <span>${esc(m.mapName || m.map || '?')}</span>
+            <span>${esc(m.leaderboardName || m.gameModeName || '')}</span>
+            <span>${esc(me?.civName || '?')} ${vs}</span>
+            ${diff ? `<span>${diff > 0 ? '+' + diff : '−' + -diff}</span>` : ''}
+            <span>${ago(m.finished || m.started)}</span>
+          </li>`;
+        }).join('')}</ol>
+      </section>`;
   }
 
   // ---------- WebSocket: partidas en curso en tiempo real ----------
