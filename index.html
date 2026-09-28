@@ -16,6 +16,7 @@
     --body:"Alegreya Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
   }
   *{box-sizing:border-box}
+  [hidden]{display:none !important}
   html,body{margin:0;min-height:100%}
   body{background:var(--stone);color:var(--bone);font:17px/1.45 var(--body)}
   .wrap{max-width:960px;margin:0 auto;padding:18px 24px 40px}
@@ -28,6 +29,10 @@
   .dot.live{background:var(--win);animation:pulse 2s infinite}
   .dot.off{background:var(--loss)}
   @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(111,191,115,.55)}70%,100%{box-shadow:0 0 0 8px rgba(111,191,115,0)}}
+  .left{display:flex;align-items:center;gap:10px 20px;flex-wrap:wrap}
+  .tabs{display:flex;gap:3px;background:var(--stone-2);padding:3px;border-radius:8px}
+  .tabs a{color:var(--ash);text-decoration:none;font-weight:700;font-size:15px;padding:5px 14px;border-radius:6px}
+  .tabs a[aria-current="page"]{background:var(--stone);color:var(--bone)}
   form{display:flex;gap:8px;align-items:center}
   label{color:var(--ash);font-size:15px}
   input{background:var(--stone-2);border:1px solid var(--line);color:var(--bone);font:inherit;padding:6px 10px;border-radius:6px;width:9em}
@@ -75,6 +80,37 @@
   .note p{margin:6px 0;color:var(--ash)}
   code{background:var(--stone);padding:1px 6px;border-radius:4px;color:var(--bone)}
 
+  .clanhead{display:flex;align-items:baseline;justify-content:space-between;gap:6px 20px;flex-wrap:wrap}
+  .clanname{font:800 30px/1.1 var(--display);margin:0}
+  .modes .playing{color:var(--win);font-weight:700}
+  .tablewrap{overflow-x:auto;margin-top:14px;border:1px solid var(--line);border-radius:8px}
+  table.clan{width:100%;border-collapse:collapse;font-size:16px}
+  table.clan th{background:var(--stone-2);text-align:left;padding:0;white-space:nowrap}
+  table.clan th button{all:unset;box-sizing:border-box;display:block;width:100%;cursor:pointer;padding:9px 14px;font:700 15px var(--body);color:var(--ash)}
+  table.clan th button[aria-pressed="true"]{color:var(--bone)}
+  table.clan th button:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+  table.clan th.num button{text-align:right}
+  table.clan td{padding:7px 14px;border-top:1px solid var(--line);white-space:nowrap}
+  table.clan tbody tr:nth-child(even) td{background:rgba(255,255,255,.025)}
+  td.num{text-align:right;font-variant-numeric:tabular-nums}
+  td.r1{font-weight:700}
+  td.rt{color:var(--ash)}
+  td.who a{color:var(--bone);text-decoration:none;font-weight:700}
+  td.who a:hover{text-decoration:underline}
+  tr.you td:first-child{box-shadow:inset 3px 0 var(--gold)}
+  a.live{color:var(--win);text-decoration:none;display:inline-flex;align-items:center;gap:7px;vertical-align:top}
+  a.live:hover{text-decoration:underline}
+  .eye{width:18px;height:18px;flex:none}
+  .idle{color:var(--ash)}
+  .st-m{display:none;font-size:14px;margin-top:2px}
+  .st-m a.live{color:var(--win);font-weight:400}
+  @media (max-width:640px){
+    table.clan th.st, table.clan td.st{display:none}
+    .st-m{display:block}
+    table.clan td.who{white-space:normal}
+    table.clan td, table.clan th button{padding-left:10px;padding-right:10px}
+  }
+
   .enter{animation:enter .45s ease-out}
   @keyframes enter{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
   @media (prefers-reduced-motion:reduce){.dot.live,.enter{animation:none}}
@@ -93,14 +129,26 @@
 <body>
 <div class="wrap">
   <header class="bar">
-    <div class="status" role="status"><span class="dot" id="dot"></span><span id="statusText">Conectando…</span></div>
+    <div class="left">
+      <nav class="tabs" aria-label="Secciones">
+        <a href="#rival" data-view="rival">Rival</a>
+        <a href="#clan" data-view="clan">Clan</a>
+      </nav>
+      <div class="status" role="status"><span class="dot" id="dot"></span><span id="statusText">Conectando…</span></div>
+    </div>
     <form id="who">
       <label for="pid">Profile ID</label>
       <input id="pid" inputmode="numeric" autocomplete="off">
       <button type="submit">Seguir</button>
     </form>
+    <form id="clanForm" hidden>
+      <label for="tag">Clan</label>
+      <input id="tag" autocomplete="off" spellcheck="false">
+      <button type="submit">Ver</button>
+    </form>
   </header>
   <main class="scene" id="scene"><div class="note"><h2>Buscando tu partida…</h2></div></main>
+  <section class="scene" id="clanView" hidden></section>
 </div>
 
 <script>
@@ -109,6 +157,7 @@
   const WS  = 'wss://socket.aoe2companion.com/listen';
   const LANG = 'es';
   const DEFAULT_ID = '2575121';
+  const DEFAULT_CLAN = 'TRSGS';
   const POLL_MS = 30000;
   const AOE_COLORS = {1:'#405BFF',2:'#FF0000',3:'#00FF00',4:'#FFFF00',5:'#00FFFF',6:'#FF57B3',7:'#797979',8:'#FF9600'};
 
@@ -152,23 +201,34 @@
     if (min < 60) return `hace ${min} min`;
     const h = Math.round(min / 60);
     if (h < 48) return `hace ${h} h`;
-    return `hace ${Math.round(h / 24)} días`;
+    const days = Math.round(h / 24);
+    return days < 60 ? `hace ${days} días` : `hace ${Math.round(days / 30)} meses`;
   }
   const stillRunning = m => !m.finished && !m.abandoned && (Date.now() - new Date(m.started)) < 3 * 3600e3;
 
-  function setStatus(kind) {
+  let view = 'rival';
+  const statuses = { rival: 'connecting', clan: 'connecting' };
+  function paintStatus() {
+    const kind = statuses[view];
     $('#dot').className = 'dot ' + (kind === 'live' ? 'live' : kind === 'off' ? 'off' : '');
     $('#statusText').textContent =
       kind === 'live' ? 'En vivo' :
-      kind === 'off'  ? `Sin conexión en vivo, consultando cada ${POLL_MS / 1000} s` :
+      kind === 'off'  ? (view === 'rival' ? `Sin conexión en vivo, consultando cada ${POLL_MS / 1000} s` : 'Sin conexión en vivo, reintentando…') :
                         'Conectando…';
   }
+  function setStatus(kind) { statuses.rival = kind; paintStatus(); }
+  function setClanStatus(kind) { statuses.clan = kind; paintStatus(); }
+  const baseTitle = () => view === 'clan' ? `Clan ${clan.tag}` : 'Rival AoE2';
 
   // ---------- ELO de RM 1v1 (se busca en el perfil de cada jugador) ----------
   const profiles = new Map(); // profileId -> { at, data, loading }
   const PROFILE_TTL = 10 * 60e3;
   const isRm1v1 = l => ['rm_1v1', 3, '3'].includes(l.leaderboardId) || /^rm 1v1$/i.test(l.abbreviation || '');
-  const rm1v1 = id => profiles.get(String(id))?.data;
+  const isRmTeam = l => ['rm_team', 4, '4'].includes(l.leaderboardId) || /^rm team$/i.test(l.abbreviation || '');
+  const rm1v1 = id => {
+    const d = profiles.get(String(id))?.data;
+    return d === undefined ? undefined : (d.rm1v1 || { none: true });
+  };
 
   function loadProfiles(ids) {
     const need = ids.filter(id => {
@@ -177,18 +237,24 @@
     });
     if (!need.length) return;
     Promise.allSettled(need.map(id => {
-      const entry = { at: Date.now(), data: rm1v1(id), loading: true };
+      const entry = { at: Date.now(), data: profiles.get(String(id))?.data, loading: true };
       profiles.set(String(id), entry);
       return fetch(`${API}/profiles/${encodeURIComponent(id)}?language=${LANG}&exclude=ratings`)
         .then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))
         .then(j => {
-          const lb = (camel(j).leaderboards || []).find(isRm1v1);
-          entry.data = lb ? { rating: lb.rating, max: lb.maxRating, wins: lb.wins ?? 0, losses: lb.losses ?? 0, rank: lb.rank, streak: lb.streak }
-                          : { none: true };
+          const lbs = camel(j).leaderboards || [];
+          const pick = test => {
+            const lb = lbs.find(test);
+            return lb ? { rating: lb.rating, max: lb.maxRating, wins: lb.wins ?? 0, losses: lb.losses ?? 0, rank: lb.rank, streak: lb.streak, last: lb.lastMatchTime } : null;
+          };
+          entry.data = { rm1v1: pick(isRm1v1), team: pick(isRmTeam) };
         })
         .catch(() => { entry.at = Date.now() - PROFILE_TTL + 60e3; }) // si falla, reintenta en 1 min
         .finally(() => { entry.loading = false; });
-    })).then(() => { if (current) render(current.match, current.live, current.src); });
+    })).then(() => {
+      if (current) render(current.match, current.live, current.src);
+      if (clan.loaded) renderClan();
+    });
   }
 
   // ---------- render ----------
@@ -264,7 +330,7 @@
 
     document.title = live && rivals.length
       ? `⚔ ${rivals.map(p => `${p.name} (${rm1v1(p.profileId)?.rating ?? p.rating ?? '?'})`).join(', ')}`
-      : 'Rival AoE2';
+      : baseTitle();
   }
 
   function renderNote(title, html) {
@@ -351,7 +417,7 @@
     profileId = String(id).trim();
     store('aoe2-profile-id', profileId);
     $('#pid').value = profileId;
-    try { history.replaceState(null, '', '?id=' + encodeURIComponent(profileId)); } catch {}
+    try { history.replaceState(null, '', '?id=' + encodeURIComponent(profileId) + location.hash); } catch {}
     current = null;
     renderNote('Buscando tu partida…', '');
     connect();
@@ -363,7 +429,214 @@
     if (v) follow(v);
   });
 
+  // ---------- CLAN ----------
+  const clan = {
+    tag: new URLSearchParams(location.search).get('clan') || store('aoe2-clan') || DEFAULT_CLAN,
+    members: [], lb1: new Map(), lbt: new Map(), ongoing: new Map(),
+    loaded: false, loading: false, error: null, sort: 'r1',
+    socket: null, socketKey: '', socketUp: false, retryTimer: null, delay: 2000,
+  };
+  const EYE = '<svg class="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const flagImg = cc => cc ? `<img class="flag" src="https://flagcdn.com/w40/${esc(cc)}.png" alt="" onerror="this.remove()">` : '';
+
+  async function getJson(url) {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return camel(await r.json());
+  }
+
+  async function loadClan() {
+    const tag = clan.tag;
+    clan.loading = true;
+    try {
+      const q = `clan=${encodeURIComponent(tag)}&per_page=100&page=1&language=${LANG}`;
+      const [mem, l1, lt] = await Promise.all([
+        getJson(`${API}/profiles?${q}`),
+        getJson(`${API}/leaderboards/rm_1v1?${q}`).catch(() => null),
+        getJson(`${API}/leaderboards/rm_team?${q}`).catch(() => null),
+      ]);
+      if (tag !== clan.tag) return; // cambiaron el clan mientras cargaba
+      clan.members = mem.profiles || [];
+      clan.lb1 = new Map((l1?.players || []).map(p => [String(p.profileId), p]));
+      clan.lbt = new Map((lt?.players || []).map(p => [String(p.profileId), p]));
+      clan.error = null;
+      clan.loaded = true;
+      // Los que no aparecen en ningún leaderboard del clan se consultan de a uno.
+      loadProfiles(clan.members.map(m => m.profileId).filter(id => !clan.lb1.has(String(id)) && !clan.lbt.has(String(id))));
+      connectClan();
+    } catch (e) {
+      if (tag === clan.tag) clan.error = e.message;
+    } finally {
+      if (tag === clan.tag) { clan.loading = false; renderClan(); }
+    }
+  }
+
+  function memberInfo(mem) {
+    const id = String(mem.profileId);
+    const a = clan.lb1.get(id), b = clan.lbt.get(id);
+    const entry = profiles.get(id), d = entry?.data;
+    const pending = !a && !b && (!entry || (entry.loading && !d));
+    const lasts = [a?.lastMatchTime, b?.lastMatchTime, d?.rm1v1?.last, d?.team?.last].filter(Boolean).map(t => new Date(t));
+    let match = null;
+    for (const m of clan.ongoing.values()) {
+      if (players(m).some(p => String(p.profileId) === id) && (!match || new Date(m.started) > new Date(match.started))) match = m;
+    }
+    return {
+      mem, pending, match,
+      r1: a?.rating ?? d?.rm1v1?.rating ?? null,
+      rt: b?.rating ?? d?.team?.rating ?? null,
+      last: lasts.length ? new Date(Math.max(...lasts)) : null,
+    };
+  }
+
+  function statusHtml(r) {
+    const m = r.match;
+    if (!m) return `<span class="idle">${r.last ? 'Jugó ' + ago(r.last) : '—'}</span>`;
+    const all = players(m);
+    const me = all.find(p => String(p.profileId) === String(r.mem.profileId));
+    const map = m.mapName || m.map || 'Partida';
+    let txt;
+    if (all.length === 2) {
+      txt = `${map} vs ${all.find(p => p !== me)?.name ?? '?'}`;
+    } else {
+      const sizes = Object.values(all.reduce((acc, p) => (p.team != null && p.team >= 0 && (acc[p.team] = (acc[p.team] || 0) + 1), acc), {}));
+      txt = sizes.length === 2 ? `${map} ${sizes[0]}v${sizes[1]}` : `${map}, ${all.length} jugadores`;
+      const clanIds = new Set(clan.members.map(x => String(x.profileId)));
+      const mates = all.filter(p => p !== me && me && p.team === me.team && clanIds.has(String(p.profileId))).map(p => p.name);
+      if (mates.length) txt += ` con ${mates.join(', ')}`;
+    }
+    return `<a class="live" href="aoe2de://1/${esc(m.matchId)}" title="Ver la partida en el juego">${EYE}${esc(txt)}</a>`;
+  }
+
+  function renderClan() {
+    const el = $('#clanView');
+    if (!clan.loaded) {
+      el.innerHTML = clan.error
+        ? `<div class="note"><h2>No pude cargar el clan ${esc(clan.tag)}</h2><p>Detalle: ${esc(clan.error)}.</p></div>`
+        : `<div class="note"><h2>Cargando el clan ${esc(clan.tag)}…</h2></div>`;
+      return;
+    }
+    if (!clan.members.length) {
+      el.innerHTML = `<div class="note"><h2>Sin integrantes</h2><p>No encontramos a nadie en el clan <strong>${esc(clan.tag)}</strong>. Tiene que ser el tag del clan oficial del juego, escrito igual que en el juego.</p></div>`;
+      return;
+    }
+    const num = (x, k) => x[k] ?? -1;
+    const rows = clan.members.map(memberInfo).sort((a, b) =>
+      clan.sort === 'name'   ? String(a.mem.name).localeCompare(String(b.mem.name), 'es', { sensitivity: 'base' }) :
+      clan.sort === 'status' ? (!!b.match - !!a.match) || ((b.last || 0) - (a.last || 0)) :
+      clan.sort === 'rt'     ? (num(b, 'rt') - num(a, 'rt')) || (num(b, 'r1') - num(a, 'r1')) :
+                               (num(b, 'r1') - num(a, 'r1')) || (num(b, 'rt') - num(a, 'rt')));
+    const playing = rows.filter(r => r.match).length;
+    const th = (key, label, cls = '') =>
+      `<th class="${cls}" scope="col"><button type="button" data-sort="${key}" aria-pressed="${clan.sort === key}">${label}${clan.sort === key ? ' ▾' : ''}</button></th>`;
+    const cell = (v, r) => v ?? (r.pending ? '…' : '—');
+    el.innerHTML = `
+      <div class="clanhead">
+        <h2 class="clanname">${esc(clan.tag)}</h2>
+        <div class="modes"><span>${rows.length} integrantes</span><span class="${playing ? 'playing' : ''}">${playing ? `${playing} jugando ahora` : 'Nadie jugando ahora'}</span></div>
+      </div>
+      <div class="tablewrap"><table class="clan">
+        <thead><tr>${th('r1', '1v1', 'num')}${th('rt', 'TG', 'num')}${th('name', 'Jugador')}${th('status', 'Estado', 'st')}</tr></thead>
+        <tbody>${rows.map(r => {
+          const cc = (r.mem.country || '').toLowerCase();
+          const you = String(r.mem.profileId) === String(profileId);
+          return `<tr class="${you ? 'you' : ''}">
+            <td class="num r1">${cell(r.r1, r)}</td>
+            <td class="num rt">${cell(r.rt, r)}</td>
+            <td class="who">${flagImg(cc)}<a href="https://www.aoe2companion.com/profile/${esc(r.mem.profileId)}" target="_blank" rel="noopener">${esc(r.mem.name)}</a> <span class="pid">(${esc(r.mem.profileId)})</span><div class="st-m">${statusHtml(r)}</div></td>
+            <td class="st">${statusHtml(r)}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>`;
+    if (view === 'clan' && !(current?.live)) document.title = baseTitle();
+  }
+
+  $('#clanView').addEventListener('click', e => {
+    const b = e.target.closest('[data-sort]');
+    if (b) { clan.sort = b.dataset.sort; renderClan(); }
+  });
+
+  function connectClan() {
+    const ids = clan.members.map(m => m.profileId).join(',');
+    if (clan.socket && clan.socketKey === ids && clan.socketUp) return;
+    clearTimeout(clan.retryTimer);
+    if (clan.socket) { clan.socket.onclose = null; clan.socket.close(); clan.socket = null; }
+    clan.ongoing.clear();
+    clan.socketKey = ids;
+    clan.socketUp = false;
+    if (!ids) return;
+    setClanStatus('connecting');
+    let ws;
+    try {
+      ws = new WebSocket(`${WS}?handler=ongoing-matches&profile_ids=${encodeURIComponent(ids)}&language=${LANG}`);
+    } catch { return retryClan(); }
+    clan.socket = ws;
+    ws.onopen = () => { clan.socketUp = true; clan.delay = 2000; setClanStatus('live'); };
+    ws.onmessage = ev => {
+      let msg;
+      try { msg = camel(JSON.parse(ev.data)); } catch { return; }
+      if (!Array.isArray(msg)) return;
+      for (const e of msg) {
+        const id = e.data?.matchId;
+        if (id == null) continue;
+        if (e.type === 'matchAdded') clan.ongoing.set(id, e.data);
+        else if (e.type === 'matchUpdated') clan.ongoing.set(id, { ...clan.ongoing.get(id), ...e.data });
+        else if (e.type === 'matchRemoved') clan.ongoing.delete(id);
+      }
+      renderClan();
+    };
+    ws.onclose = () => { clan.socketUp = false; retryClan(); };
+  }
+  function retryClan() {
+    setClanStatus('off');
+    clan.retryTimer = setTimeout(connectClan, clan.delay);
+    clan.delay = Math.min(clan.delay * 2, 60000);
+  }
+
+  function openClan(tag) {
+    clan.tag = String(tag).trim();
+    store('aoe2-clan', clan.tag);
+    $('#tag').value = clan.tag;
+    clan.loaded = false;
+    clan.members = [];
+    clan.error = null;
+    if (clan.socket) { clan.socket.onclose = null; clan.socket.close(); clan.socket = null; }
+    clearTimeout(clan.retryTimer);
+    clan.ongoing.clear();
+    clan.socketKey = '';
+    setClanStatus('connecting');
+    renderClan();
+    loadClan();
+  }
+  $('#clanForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const v = $('#tag').value.trim();
+    if (v) openClan(v);
+  });
+
+  // Ratings y "hace X" se refrescan solos mientras la sección está abierta.
+  setInterval(() => { if (view === 'clan' && clan.loaded && !clan.loading) loadClan(); }, 5 * 60e3);
+  setInterval(() => { if (view === 'clan' && clan.loaded) renderClan(); }, 60e3);
+
+  // ---------- secciones ----------
+  function show(v) {
+    view = v === 'clan' ? 'clan' : 'rival';
+    $('#scene').hidden = view !== 'rival';
+    $('#who').hidden = view !== 'rival';
+    $('#clanView').hidden = view !== 'clan';
+    $('#clanForm').hidden = view !== 'clan';
+    document.querySelectorAll('.tabs a').forEach(a => a.setAttribute('aria-current', a.dataset.view === view ? 'page' : 'false'));
+    paintStatus();
+    if (view === 'clan') {
+      $('#tag').value = clan.tag;
+      if (!clan.loaded && !clan.loading) openClan(clan.tag);
+      else renderClan();
+    } else if (!(current?.live)) document.title = baseTitle();
+  }
+  window.addEventListener('hashchange', () => show(location.hash.slice(1)));
+
   follow(profileId);
+  show(location.hash.slice(1));
 })();
 </script>
 </body>
