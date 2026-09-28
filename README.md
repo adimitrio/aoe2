@@ -23,6 +23,7 @@ Muestra en tiempo real contra quién estás jugando en **Age of Empires II: Defi
 - Quién está jugando en este momento: mapa y rival en 1v1, o formato y compañeros de clan en partidas por equipos. Tocando el estado se abre la partida en el juego para verla como espectador.
 - Para el resto, hace cuánto jugó su última partida ranked.
 - Se ordena por 1v1, TG, nombre o estado tocando el encabezado de cada columna.
+- Tocando el nombre de un integrante se abre su partida en la sección Rival, y tocando su profile ID, su perfil de aoe2companion.
 
 ## Uso
 
@@ -30,7 +31,9 @@ Muestra en tiempo real contra quién estás jugando en **Age of Empires II: Defi
 2. En el campo **Jugador** escribí el nombre o el profile ID y tocá **Ver**. Si el nombre coincide con varios jugadores, aparece una lista para elegir. También se puede pasar el ID directo en la URL con `?id=PROFILE_ID`.
 3. Dejala abierta: cuando arranca una partida, la pantalla se actualiza sola.
 
-El Profile ID se guarda en tu navegador, así que la próxima vez ya aparece cargado.
+Tocando la tarjeta de un rival o el nombre de cualquier jugador, en una partida o en la sección Clan, se abre su partida: la que está jugando o la última. Con **Atrás** se vuelve al jugador anterior.
+
+El Profile ID se guarda en tu navegador, así que la próxima vez ya aparece cargado. Abrir a otro jugador así no cambia el guardado: eso se hace desde el campo **Jugador**.
 
 Para encontrar tu Profile ID, buscá tu nombre en [aoe2companion.com](https://www.aoe2companion.com). Es el número que aparece al final de la URL de tu perfil, por ejemplo `aoe2companion.com/profile/2575121`.
 

@@ -54,8 +54,13 @@
   .clock span{color:var(--ash);font-size:14px}
 
   .rivals{display:grid;gap:8px;margin-top:18px}
-  .rival{display:grid;grid-template-columns:6px 1fr;background:var(--stone-2);border-radius:8px;overflow:hidden}
+  .rival{position:relative;display:grid;grid-template-columns:6px 1fr;background:var(--stone-2);border-radius:8px;overflow:hidden}
   .band{background:var(--pc,var(--gold))}
+  /* Toda la tarjeta abre la partida del rival: el link del nombre la cubre y los de .meta quedan por encima. */
+  .rival a[data-player]::after{content:"";position:absolute;inset:0}
+  .rival a[data-player]:focus-visible{outline:none}
+  .rival a[data-player]:focus-visible::after{outline:2px solid var(--gold);outline-offset:-2px;border-radius:8px}
+  .rival .meta a{position:relative;z-index:1}
   .inner{display:grid;grid-template-columns:40px 1fr auto;column-gap:14px;row-gap:1px;align-items:center;padding:10px 16px}
   .civimg{grid-row:1/span 2;width:40px;height:40px}
   .rival h1{font:800 26px/1.15 var(--display);margin:0;overflow-wrap:anywhere;min-width:0}
@@ -69,6 +74,8 @@
   .flag{height:12px;vertical-align:-1px;margin-right:5px;border-radius:2px}
   .up{color:var(--loss)} .down{color:var(--win)}
   .pid{font:400 13px var(--body);color:var(--ash);font-variant-numeric:tabular-nums;white-space:nowrap}
+  a[data-player]{color:inherit;text-decoration:none}
+  a[data-player]:hover{text-decoration:underline}
 
   .side{margin-top:22px;padding-top:14px;border-top:1px solid var(--line);color:var(--ash);font-size:15px;display:flex;flex-direction:column;gap:6px}
   .side strong{color:var(--bone);font-weight:500}
@@ -107,6 +114,7 @@
   td.rt{color:var(--ash)}
   td.who a{color:var(--bone);text-decoration:none;font-weight:700}
   td.who a:hover{text-decoration:underline}
+  td.who .pid a{color:inherit;font-weight:400}
   tr.you td:first-child{box-shadow:inset 3px 0 var(--gold)}
   a.live{color:var(--win);text-decoration:none;display:inline-flex;align-items:center;gap:7px;vertical-align:top}
   a.live:hover{text-decoration:underline}
@@ -271,6 +279,8 @@
 
   // ---------- render ----------
   const is1v1Match = m => m.leaderboardId === 'rm_1v1' || m.leaderboardId === 3;
+  // El nombre de un jugador lleva a su partida acá mismo (ver peek).
+  const playerLink = (id, html) => `<a href="?id=${esc(encodeURIComponent(id))}#rival" data-player="${esc(id)}">${html}</a>`;
 
   function rivalCard(p, me, m) {
     const d = rm1v1(p.profileId), mine = me && rm1v1(me.profileId);
@@ -288,7 +298,7 @@
         <div class="band"></div>
         <div class="inner">
           ${p.civImageUrl ? `<img class="civimg" src="${esc(p.civImageUrl)}" alt="">` : '<span class="civimg"></span>'}
-          <h1>${esc(p.name || 'Jugador ' + p.profileId)} <span class="pid">(${esc(p.profileId)})</span></h1>
+          <h1>${playerLink(p.profileId, esc(p.name || 'Jugador ' + p.profileId))} <span class="pid">(${esc(p.profileId)})</span></h1>
           <div class="elo"><small>1v1</small>${elo}</div>
           <div class="meta">
             <span class="civname">${esc(p.civName || p.civ || '?')}</span>
@@ -306,7 +316,8 @@
 
   const line = p => {
     const d = rm1v1(p.profileId);
-    return `<div><span class="swatch" style="--pc:${esc(color(p) || '')}"></span><strong>${esc(p.name)}</strong> <span class="pid">(${esc(p.profileId)})</span>, RM 1v1 ${d?.rating ?? (d?.none ? '—' : '…')}, ${esc(p.civName || p.civ || '?')}</div>`;
+    const name = isMe(p) ? esc(p.name) : playerLink(p.profileId, esc(p.name));
+    return `<div><span class="swatch" style="--pc:${esc(color(p) || '')}"></span><strong>${name}</strong> <span class="pid">(${esc(p.profileId)})</span>, RM 1v1 ${d?.rating ?? (d?.none ? '—' : '…')}, ${esc(p.civName || p.civ || '?')}</div>`;
   };
 
   let picking = false; // mostrando resultados de búsqueda
@@ -428,12 +439,15 @@
   setInterval(() => { if (!(current?.live && current.src === 'ws' && wsUp)) loadLast(); }, POLL_MS);
 
   // ---------- perfil ----------
-  function follow(id) {
+  let peeking = false; // siguiendo a alguien abierto con un clic, sin cambiar el guardado (ver peek)
+  function follow(id, save = true) {
     picking = false;
+    peeking = !save;
     profileId = String(id).trim();
-    store('aoe2-profile-id', profileId);
+    if (save) store('aoe2-profile-id', profileId);
     $('#pid').value = profileId;
-    try { history.replaceState(null, '', '?id=' + encodeURIComponent(profileId) + location.hash); } catch {}
+    // La marca de vistazo queda en el historial para que recargar tampoco pise el jugador guardado.
+    try { history.replaceState(peeking ? { peek: true } : null, '', '?id=' + encodeURIComponent(profileId) + location.hash); } catch {}
     current = null;
     renderNote('Buscando la última partida…', '');
     connect();
@@ -491,7 +505,7 @@
   $('#scene').addEventListener('click', e => {
     const pick = e.target.closest('[data-pick]');
     if (pick) return follow(pick.dataset.pick);
-    if (e.target.closest('[data-cancel]')) follow(profileId);
+    if (e.target.closest('[data-cancel]')) follow(profileId, !peeking);
   });
 
   // ---------- CLAN ----------
@@ -608,7 +622,7 @@
           return `<tr class="${you ? 'you' : ''}">
             <td class="num r1">${cell(r.r1, r)}</td>
             <td class="num rt">${cell(r.rt, r)}</td>
-            <td class="who">${flagImg(cc)}<a href="https://www.aoe2companion.com/profile/${esc(r.mem.profileId)}" target="_blank" rel="noopener">${esc(r.mem.name)}</a> <span class="pid">(${esc(r.mem.profileId)})</span><div class="st-m">${statusHtml(r)}</div></td>
+            <td class="who">${flagImg(cc)}${playerLink(r.mem.profileId, esc(r.mem.name))} <span class="pid">(<a href="https://www.aoe2companion.com/profile/${esc(r.mem.profileId)}" target="_blank" rel="noopener" title="Perfil en aoe2companion">${esc(r.mem.profileId)}</a>)</span><div class="st-m">${statusHtml(r)}</div></td>
             <td class="st">${statusHtml(r)}</td>
           </tr>`;
         }).join('')}</tbody>
@@ -698,9 +712,36 @@
       else renderClan();
     } else if (!(current?.live)) document.title = baseTitle();
   }
-  window.addEventListener('hashchange', () => show(location.hash.slice(1)));
+  window.addEventListener('hashchange', () => {
+    // Cambiar de sección crea otra entrada en el historial: si era un vistazo, la marca pasa a la nueva.
+    if (peeking && !history.state?.peek) try { history.replaceState({ peek: true }, ''); } catch {}
+    show(location.hash.slice(1));
+  });
 
-  follow(profileId);
+  // ---------- navegación entre jugadores ----------
+  // Tocar a un jugador (su nombre o su tarjeta) abre su partida acá mismo. Es un vistazo: deja una entrada en el
+  // historial para volver con Atrás y no cambia el jugador guardado (eso se hace desde el buscador).
+  function peek(id) {
+    id = String(id);
+    if (id === profileId) { location.hash = 'rival'; return; } // ya es el seguido: solo mostrar su partida
+    try { history.pushState({ peek: true }, '', '?id=' + encodeURIComponent(id) + '#rival'); } catch {}
+    follow(id, false);
+    show('rival');
+  }
+  document.addEventListener('click', e => {
+    const a = e.target.closest('a[data-player]');
+    // Con Ctrl, Shift o la ruedita se abre como cualquier link, en otra pestaña o ventana.
+    if (!a || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    peek(a.dataset.player);
+  });
+  window.addEventListener('popstate', () => {
+    const id = new URLSearchParams(location.search).get('id');
+    if (id && id !== profileId) follow(id, !history.state?.peek);
+    show(location.hash.slice(1)); // si además cambia el ?id=, el navegador no dispara hashchange
+  });
+
+  follow(profileId, !history.state?.peek); // al recargar un vistazo, el jugador guardado no cambia
   show(location.hash.slice(1));
 })();
 </script>
