@@ -41,6 +41,8 @@ Para encontrar tu Profile ID, buscá tu nombre en [aoe2companion.com](https://ww
 
 También funciona como **Browser Source en OBS** para mostrarlo en un stream.
 
+Tocando **Aviso**, arriba de todo, suena una campanita cada vez que el jugador seguido arranca una partida. La elección queda guardada en el navegador. Como los navegadores no dejan sonar una página hasta que se la toca, después de abrirla hay que tocarla una vez; en OBS suena sin tocar nada.
+
 ## Cómo funciona
 
 Es un único `index.html`, sin dependencias ni backend. Todas las consultas las hace el navegador de quien abre la página, contra la API de [aoe2companion](https://www.aoe2companion.com):
