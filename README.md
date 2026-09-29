@@ -10,6 +10,7 @@ Muestra en tiempo real contra quién estás jugando en **Age of Empires II: Defi
 - Cada rival con su nombre, profile ID y color de jugador.
 - Su ELO de RM 1v1 y la diferencia con el del jugador seguido (por ejemplo `+24 vs Mysa_`).
 - Su civilización, país, winrate y cantidad de partidas en 1v1, ELO máximo y el rating del modo que se está jugando.
+- Su puesto en el ranking de 1v1 (por ejemplo `puesto 12.345 de 46.419`) y, si está activo en ese ranking, su racha actual (`3 victorias seguidas`).
 - Links a su perfil en aoe2companion y aoe2insights.
 - El mapa, el modo, el servidor y el tiempo transcurrido desde que arrancó la partida.
 - El equipo del jugador seguido, con profile ID, ELO de 1v1 y civilización.

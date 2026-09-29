@@ -265,7 +265,7 @@
           const lbs = camel(j).leaderboards || [];
           const pick = test => {
             const lb = lbs.find(test);
-            return lb ? { rating: lb.rating, max: lb.maxRating, wins: lb.wins ?? 0, losses: lb.losses ?? 0, rank: lb.rank, streak: lb.streak, last: lb.lastMatchTime } : null;
+            return lb ? { rating: lb.rating, max: lb.maxRating, wins: lb.wins ?? 0, losses: lb.losses ?? 0, rank: lb.rank, total: lb.total, streak: lb.streak, active: lb.active, last: lb.lastMatchTime } : null;
           };
           entry.data = { rm1v1: pick(isRm1v1), team: pick(isRmTeam) };
         })
@@ -291,6 +291,11 @@
       diffTxt = diff > 0 ? `<span class="up">+${diff} vs ${esc(me.name)}</span>` : diff < 0 ? `<span class="down">−${-diff} vs ${esc(me.name)}</span>` : `igual que ${esc(me.name)}`;
     }
     const games = d ? (d.wins + d.losses) : 0;
+    const n = x => Number(x).toLocaleString(LANG, { useGrouping: 'always' });
+    const rank = d?.rank > 0 ? `puesto ${n(d.rank)}${d.total > 0 ? ` de ${n(d.total)}` : ''}` : '';
+    // La racha viene con signo (+ victorias, − derrotas). Si no está activo en el ranking, es vieja: no se muestra.
+    const run = d?.active ? Math.abs(d.streak || 0) : 0;
+    const streak = !run ? '' : run === 1 ? (d.streak > 0 ? 'ganó la última' : 'perdió la última') : `${run} ${d.streak > 0 ? 'victorias' : 'derrotas'} seguidas`;
     const cc = (p.country || '').toLowerCase();
     const pc = color(p);
     return `
@@ -304,7 +309,9 @@
             <span class="civname">${esc(p.civName || p.civ || '?')}</span>
             ${cc ? `<span><img class="flag" src="https://flagcdn.com/w40/${esc(cc)}.png" alt="" onerror="this.remove()">${esc(cc.toUpperCase())}</span>` : ''}
             ${games ? `<span>${Math.round(100 * d.wins / games)}% de ${games} en 1v1</span>` : ''}
+            ${streak ? `<span>${streak}</span>` : ''}
             ${d?.max ? `<span>máx ${d.max}</span>` : ''}
+            ${rank ? `<span>${rank}</span>` : ''}
             ${!is1v1Match(m) && p.rating != null ? `<span>esta partida ${p.rating}</span>` : ''}
             <a href="https://www.aoe2companion.com/profile/${esc(p.profileId)}" target="_blank" rel="noopener">companion</a>
             <a href="https://www.aoe2insights.com/user/${esc(p.profileId)}/" target="_blank" rel="noopener">insights</a>
