@@ -13,12 +13,14 @@ Muestra en tiempo real contra quién estás jugando en **Age of Empires II: Defi
 - Su puesto en el ranking de 1v1 (por ejemplo `puesto 12.345 de 46.419`) y, si está activo en ese ranking, su racha actual (`3 victorias seguidas`).
 - Links a su perfil en aoe2companion y aoe2insights.
 - El mapa, el modo, el servidor y el tiempo transcurrido desde que arrancó la partida.
+- **Ver en el juego**: abre la partida en Age of Empires II para mirarla como espectador.
 - El equipo del jugador seguido, con profile ID, ELO de 1v1 y civilización.
 - En la pestaña del navegador aparece `⚔ Rival (ELO)`, así se ve sin cambiar de ventana.
 
 **Cuando no estás en partida**
 - La última partida, con el resultado (victoria o derrota) y cuánto duró.
 - Las partidas anteriores del jugador seguido: resultado, mapa, modo, civilización, rival, ELO ganado o perdido y hace cuánto se jugó.
+- La grabación (rec) de la última partida y de las anteriores, para descargar: un `.zip` con el archivo `.aoe2record`. Microsoft las guarda unos meses; si ya no está, el link avisa **No disponible**.
 
 **Sección Clan** (`#clan`)
 - Todos los integrantes de un clan con su ELO de RM 1v1 y de TG, país y profile ID.
@@ -45,7 +47,7 @@ Tocando **Aviso**, arriba de todo, suena una campanita cada vez que el jugador s
 
 ## Cómo funciona
 
-Es un único `index.html`, sin dependencias ni backend. Todas las consultas las hace el navegador de quien abre la página, contra la API de [aoe2companion](https://www.aoe2companion.com):
+Es un único `index.html`, sin dependencias ni backend. Todas las consultas las hace el navegador de quien abre la página, contra la API de [aoe2companion](https://www.aoe2companion.com) y, para las grabaciones, contra la de Microsoft:
 
 | Qué | Endpoint | Cuándo |
 |---|---|---|
@@ -57,6 +59,7 @@ Es un único `index.html`, sin dependencias ni backend. Todas las consultas las 
 | Integrantes de un clan | `GET https://data.aoe2companion.com/api/profiles?clan=TAG` | Al abrir la sección Clan y cada 5 min |
 | ELO del clan | `GET https://data.aoe2companion.com/api/leaderboards/rm_1v1?clan=TAG` (y `rm_team`) | Al abrir la sección Clan y cada 5 min |
 | Partidas en curso del clan | El mismo WebSocket, con todos los profile IDs del clan | En tiempo real |
+| Grabación de una partida | `GET https://api.ageofempires.com/api/GameStats/AgeII/GetMatchReplay/?gameId=…&profileId=…` | Al tocar **Descargar rec** o **rec** |
 
 Si el WebSocket se corta, la página se reconecta sola y mientras tanto sigue consultando la última partida cada 30 segundos.
 
