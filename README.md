@@ -18,6 +18,7 @@ Muestra en tiempo real contra quién estás jugando en **Age of Empires II: Defi
 
 **Cuando no estás en partida**
 - La última partida, con el resultado (victoria o derrota) y cuánto duró.
+- Las partidas anteriores del jugador seguido: resultado, mapa, modo, civilización, rival, ELO ganado o perdido y hace cuánto se jugó.
 
 **Sección Clan** (`#clan`)
 - Todos los integrantes de un clan con su ELO de RM 1v1 y de TG, país y profile ID.
@@ -48,6 +49,7 @@ Es un único `index.html`, sin dependencias ni backend. Todas las consultas las 
 |---|---|---|
 | Partidas en curso | `wss://socket.aoe2companion.com/listen?handler=ongoing-matches&profile_ids=…` | En tiempo real (WebSocket) |
 | Última partida | `GET https://data.aoe2companion.com/api/matches?profile_ids=…&per_page=1` | Al abrir y cada 30 s como respaldo |
+| Partidas anteriores | `GET https://data.aoe2companion.com/api/matches?profile_ids=…&per_page=10` | Al abrir y cuando termina una partida |
 | ELO de RM 1v1 | `GET https://data.aoe2companion.com/api/profiles/{id}` | Por jugador, con caché de 10 min |
 | Búsqueda por nombre | `GET https://data.aoe2companion.com/api/profiles?search=NOMBRE` | Al buscar un jugador por nombre |
 | Integrantes de un clan | `GET https://data.aoe2companion.com/api/profiles?clan=TAG` | Al abrir la sección Clan y cada 5 min |
