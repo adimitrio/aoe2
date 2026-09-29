@@ -89,6 +89,10 @@
   .history{margin-top:22px;padding-top:14px;border-top:1px solid var(--line)}
   .history ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;color:var(--ash);font-size:15px}
   .history li{display:flex;flex-wrap:wrap;gap:2px 14px}
+  a.rec{color:var(--gold);text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+  a.rec:hover{text-decoration:underline}
+  a.rec.off{color:var(--ash)}
+  a.rec svg{width:16px;height:16px;flex:none}
 
   .past .rival{opacity:.82}
   .note{background:var(--stone-2);border-radius:10px;padding:20px 22px;max-width:70ch}
@@ -355,7 +359,9 @@
         ${m.mapImageUrl ? `<img class="mapimg" src="${esc(m.mapImageUrl)}" alt="">` : '<div class="mapimg"></div>'}
         <div>
           <h2 class="mapname">${esc(m.mapName || m.map || 'Mapa desconocido')}</h2>
-          <div class="modes"><span>${esc(mode)}</span>${m.server ? `<span>Servidor ${esc(m.server)}</span>` : ''}${result}</div>
+          <div class="modes"><span>${esc(mode)}</span>${m.server ? `<span>Servidor ${esc(m.server)}</span>` : ''}${result}${live
+            ? `<a class="live" href="aoe2de://1/${esc(m.matchId)}" title="Abre el juego para mirarla como espectador">${EYE}Ver en el juego</a>`
+            : recLink(m, 'Descargar rec')}</div>
         </div>
         <div class="clock">${live
           ? `<b id="elapsed">${clock(Date.now() - new Date(m.started))}</b><span>desde que arrancó</span>`
@@ -473,10 +479,52 @@
             <span>${esc(me?.civName || '?')} ${vs}</span>
             ${diff ? `<span>${diff > 0 ? '+' + diff : '−' + -diff}</span>` : ''}
             <span>${ago(m.finished || m.started)}</span>
+            ${recLink(m, 'rec')}
           </li>`;
         }).join('')}</ol>
       </section>`;
   }
+
+  // ---------- grabaciones (recs) de las partidas terminadas ----------
+  // Microsoft guarda unos meses la grabación de cada jugador. aoe.ms/replay redirige a esta dirección, pero la
+  // redirección no deja leer la respuesta desde otra página; pidiéndola directo, si ya no está se avisa acá mismo.
+  const recUrl = (matchId, pid) => `https://api.ageofempires.com/api/GameStats/AgeII/GetMatchReplay/?gameId=${encodeURIComponent(matchId)}&profileId=${encodeURIComponent(pid)}&matchId=${encodeURIComponent(matchId)}`;
+  const DOWNLOAD = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>';
+  const recs = new Map(); // matchId -> 'loading' | 'missing' | 'error'
+  function recLink(m, label) {
+    if (m.recordGame === false) return '';
+    const s = recs.get(String(m.matchId));
+    const txt = s === 'loading' ? 'Descargando…' : s === 'missing' ? 'No disponible' : s === 'error' ? 'No se pudo descargar' : label;
+    const tip = s === 'missing' ? 'Microsoft ya no la tiene, o todavía no se subió. Tocá para reintentar.'
+      : 'Grabación de la partida: un .zip con el archivo .aoe2record. Microsoft la guarda unos meses.';
+    return `<a class="rec${s === 'missing' || s === 'error' ? ' off' : ''}" href="${esc(recUrl(m.matchId, profileId))}" data-rec="${esc(m.matchId)}" title="${tip}">${DOWNLOAD}${txt}</a>`;
+  }
+
+  // Primero la del jugador seguido; si no está, la de otro jugador de la partida, que la grabó igual.
+  async function downloadRec(id) {
+    const m = [current?.match, ...hist.matches].find(x => x && String(x.matchId) === id);
+    if (!m || recs.get(id) === 'loading') return;
+    recs.set(id, 'loading');
+    repaint();
+    let state = 'missing';
+    try {
+      for (const pid of new Set([profileId, ...players(m).map(p => String(p.profileId))])) {
+        const r = await fetch(recUrl(id, pid));
+        if (r.status === 404) continue;
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(await r.blob()), download: `AgeIIDE_Replay_${id}.zip` });
+        document.body.append(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 60e3);
+        state = null;
+        break;
+      }
+    } catch { state = 'error'; }
+    if (state) recs.set(id, state); else recs.delete(id);
+    repaint();
+  }
+  const repaint = () => { if (current) render(current.match, current.live, current.src); };
 
   // ---------- WebSocket: partidas en curso en tiempo real ----------
   function pickLive() {
@@ -593,6 +641,9 @@
     const pick = e.target.closest('[data-pick]');
     if (pick) return follow(pick.dataset.pick);
     if (e.target.closest('[data-cancel]')) follow(profileId, !peeking);
+    const rec = e.target.closest('a[data-rec]');
+    // Con Ctrl, Shift o la ruedita se abre como cualquier link y la descarga el navegador.
+    if (rec && !(e.ctrlKey || e.metaKey || e.shiftKey || e.altKey)) { e.preventDefault(); downloadRec(rec.dataset.rec); }
   });
 
   // ---------- CLAN ----------
