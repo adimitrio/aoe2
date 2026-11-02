@@ -12,6 +12,7 @@
   :root{
     --stone:#232B35; --stone-2:#2C3643; --line:#3A4654;
     --bone:#ECE6D8; --ash:#9BA5B0; --gold:#D4AF52; --win:#6FBF73; --loss:#E0685C;
+    --mine:#5EEAD4; --theirs:#F3C46A;
     --display:"Alegreya SC", Georgia, "Times New Roman", serif;
     --body:"Alegreya Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
   }
@@ -45,56 +46,74 @@
   button{background:var(--gold);color:#221c0c;border:0;font:700 15px var(--body);padding:8px 14px;border-radius:6px;cursor:pointer}
 
   .scene{margin-top:22px}
-  .state{display:inline-block;font-weight:700;font-size:14px;padding:3px 10px;border-radius:999px;margin-bottom:14px}
-  .state.live{background:rgba(111,191,115,.16);color:var(--win)}
-  .state.past{background:var(--stone-2);color:var(--ash)}
-
-  .head{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center}
-  .mapimg{width:64px;height:64px;object-fit:cover;border-radius:8px;background:var(--stone-2)}
-  .mapname{font:800 28px/1.1 var(--display);margin:0}
-  .modes{display:flex;gap:4px 16px;flex-wrap:wrap;color:var(--ash);font-size:15px;margin-top:2px}
-  .clock{text-align:right}
-  .clock b{display:block;font:700 30px/1 var(--body);font-variant-numeric:tabular-nums}
-  .clock span{color:var(--ash);font-size:14px}
-
-  .rivals{display:grid;gap:8px;margin-top:18px}
-  .rival{position:relative;display:grid;grid-template-columns:6px 1fr;background:var(--stone-2);border-radius:8px;overflow:hidden}
-  .band{background:var(--pc,var(--gold))}
-  /* Toda la tarjeta abre la partida del rival: el link del nombre la cubre y los de .meta quedan por encima. */
-  .rival a[data-player]::after{content:"";position:absolute;inset:0}
-  .rival a[data-player]:focus-visible{outline:none}
-  .rival a[data-player]:focus-visible::after{outline:2px solid var(--gold);outline-offset:-2px;border-radius:8px}
-  .rival .meta a{position:relative;z-index:1}
-  .inner{display:grid;grid-template-columns:40px 1fr auto;column-gap:14px;row-gap:1px;align-items:center;padding:10px 16px}
-  .civimg{grid-row:1/span 2;width:40px;height:40px}
-  .rival h1{font:800 26px/1.15 var(--display);margin:0;overflow-wrap:anywhere;min-width:0}
-  .rivals.solo h1{font-size:34px}
-  .elo{font:700 30px/1 var(--body);font-variant-numeric:tabular-nums;text-align:right}
-  .rivals.solo .elo{font-size:38px}
-  .elo small{font-size:13px;font-weight:500;color:var(--ash);margin-right:6px}
   .meta{display:flex;gap:2px 16px;flex-wrap:wrap;color:var(--ash);font-size:14px;min-width:0}
-  .meta .civname{color:var(--bone);font-weight:500}
-  .diff{font-size:14px;text-align:right;color:var(--ash);white-space:nowrap}
   .flag{height:12px;vertical-align:-1px;margin-right:5px;border-radius:2px}
-  .up{color:var(--loss)} .down{color:var(--win)}
   .pid{font:400 13px var(--body);color:var(--ash);font-variant-numeric:tabular-nums;white-space:nowrap}
   a[data-player]{color:inherit;text-decoration:none}
   a[data-player]:hover{text-decoration:underline}
+  .seg{display:flex;gap:3px;background:var(--stone-2);padding:3px;border-radius:8px}
+  .seg button{background:transparent;color:var(--ash);font:700 15px var(--body);padding:5px 14px;border-radius:6px}
+  .seg button[aria-pressed="true"]{background:var(--gold);color:#221c0c}
+  .seg button:focus-visible{outline:2px solid var(--gold)}
 
-  .side{margin-top:22px;padding-top:14px;border-top:1px solid var(--line);color:var(--ash);font-size:15px;display:flex;flex-direction:column;gap:6px}
-  .side strong{color:var(--bone);font-weight:500}
-  .swatch{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--pc,var(--ash));margin-right:7px}
-  .result{font-weight:700}
-  .result.win{color:var(--win)} .result.loss{color:var(--loss)}
-  .history{margin-top:22px;padding-top:14px;border-top:1px solid var(--line)}
-  .history ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;color:var(--ash);font-size:15px}
-  .history li{display:flex;flex-wrap:wrap;gap:2px 14px}
+  .duels{display:flex;flex-direction:column;gap:16px}
+  .match{background:var(--stone-2);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .mhead{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:12px 20px;border-bottom:1px solid var(--line)}
+  .mapimg{width:44px;height:44px;object-fit:cover;border-radius:8px;background:var(--stone);flex:none}
+  .mtitle{flex:1 1 260px;min-width:0;display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 14px}
+  .mapname{font:800 28px/1.1 var(--display);margin:0}
+  .modes{display:flex;gap:4px 16px;flex-wrap:wrap;color:var(--ash);font-size:15px;margin-top:2px}
+  .chip{font-weight:700;font-size:14px;padding:3px 12px;border-radius:6px;white-space:nowrap}
+  .chip.win,.chip.live{background:rgba(111,191,115,.16);color:var(--win)}
+  .chip.loss{background:rgba(224,104,92,.16);color:var(--loss)}
+  .chip.none{background:var(--stone);color:var(--ash)}
   a.rec{color:var(--gold);text-decoration:none;display:inline-flex;align-items:center;gap:6px}
   a.rec:hover{text-decoration:underline}
   a.rec.off{color:var(--ash)}
   a.rec svg{width:16px;height:16px;flex:none}
 
-  .past .rival{opacity:.82}
+  /* Duelos: tu equipo a la izquierda y los rivales a la derecha, cada uno ordenado por rating. */
+  .duel{padding:12px 20px 18px;overflow-x:auto}
+  .dgrid{display:flex;flex-direction:column;gap:8px}
+  .d-row,.d-avg{display:grid;grid-template-columns:minmax(150px,230px) minmax(0,1fr) 72px minmax(0,1fr) minmax(150px,230px);column-gap:10px;align-items:center}
+  .d-avg .a{font:700 22px/1 var(--body);font-variant-numeric:tabular-nums}
+  .d-avg .a.l{text-align:right;color:var(--mine)}
+  .d-avg .a.r{color:var(--theirs)}
+  .d-vs{text-align:center}
+  .dchip{display:inline-block;min-width:52px;padding:2px 8px;border-radius:6px;font:700 14px var(--body);font-variant-numeric:tabular-nums}
+  .dchip.pos{background:rgba(111,191,115,.16);color:var(--win)}
+  .dchip.neg{background:rgba(224,104,92,.16);color:var(--loss)}
+  .d-id{min-width:0}
+  .d-id.d-r{text-align:right}
+  .d-top{display:flex;align-items:center;gap:8px;min-width:0}
+  .d-id.d-r .d-top{justify-content:flex-end}
+  .d-civ{width:34px;height:34px;flex:none;border-radius:50%;border:2px solid var(--pc,var(--line));background:var(--stone);object-fit:cover}
+  .d-name{font:500 18px/1.2 var(--body);overflow-wrap:anywhere;min-width:0}
+  .d-name.me{font-weight:700;color:var(--gold)}
+  .crown{width:18px;height:18px;flex:none;color:var(--gold)}
+  .d-sub{color:var(--ash);font-size:13px;font-variant-numeric:tabular-nums}
+  .d-id.d-l .d-sub{margin:1px 0 0 42px}
+  .d-id.d-r .d-sub{margin:1px 42px 0 0}
+  .d-track{height:36px;background:var(--stone);display:flex}
+  .d-track.d-l{justify-content:flex-end;border-radius:8px 0 0 8px}
+  .d-track.d-r{justify-content:flex-start;border-radius:0 8px 8px 0}
+  .d-bar{height:36px;min-width:70px;display:flex;align-items:center;padding:0 12px;font:700 17px var(--body);font-variant-numeric:tabular-nums;color:#10202C}
+  .d-l .d-bar{background:var(--mine);border-radius:8px 0 0 8px;justify-content:flex-start}
+  .d-r .d-bar{background:var(--theirs);border-radius:0 8px 8px 0;justify-content:flex-end}
+  .d-bar.na{background:var(--line);color:var(--ash)}
+  @media (min-width:721px){.dgrid{min-width:760px}}
+  @media (max-width:720px){
+    .d-row{grid-template-columns:minmax(0,1fr) 56px minmax(0,1fr);grid-template-areas:"il vs ir" "tl . tr";row-gap:4px}
+    .d-row .d-id.d-l{grid-area:il} .d-row .d-id.d-r{grid-area:ir} .d-row .d-vs{grid-area:vs}
+    .d-row .d-track.d-l{grid-area:tl} .d-row .d-track.d-r{grid-area:tr}
+    .d-avg{grid-template-columns:minmax(0,1fr) 56px minmax(0,1fr)}
+    .d-avg .sp{display:none}
+    .d-name{font-size:16px}
+    .d-civ{width:28px;height:28px}
+    .d-id.d-l .d-sub{margin-left:36px}
+    .d-id.d-r .d-sub{margin-right:36px}
+  }
+
   .note{background:var(--stone-2);border-radius:10px;padding:20px 22px;max-width:70ch}
   .note h2{font:800 24px/1.2 var(--display);margin:0 0 8px}
   .note p{margin:6px 0;color:var(--ash)}
@@ -145,13 +164,8 @@
   @media (prefers-reduced-motion:reduce){.dot.live,.enter{animation:none}}
   @media (max-width:560px){
     .wrap{padding:14px 16px 32px}
-    .head{grid-template-columns:auto 1fr}
-    .clock{grid-column:1/-1;text-align:left}
-    .inner{grid-template-columns:32px 1fr auto;column-gap:10px;padding:10px 12px}
-    .civimg{width:32px;height:32px}
-    .rival h1,.rivals.solo h1{font-size:22px}
-    .diff{grid-column:2/-1;grid-row:2;text-align:left}
-    .meta{grid-column:2/-1;gap:0 12px;font-size:13px}
+    .mapname{font-size:24px}
+    .duel{padding:12px 14px 16px}
   }
 </style>
 </head>
@@ -164,6 +178,10 @@
         <a href="#clan" data-view="clan">Clan</a>
       </nav>
       <div class="status" role="status"><span class="dot" id="dot"></span><span id="statusText">Conectando…</span></div>
+      <div class="seg" id="ratingSeg" role="group" aria-label="Rating a comparar">
+        <button type="button" data-mode="1v1" aria-pressed="true">1v1</button>
+        <button type="button" data-mode="tg" aria-pressed="false">Team Game</button>
+      </div>
       <button type="button" class="bell" id="bell" aria-pressed="false" title="Sonar una campanita cuando el jugador seguido arranca una partida"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Aviso</button>
     </div>
     <form id="who">
@@ -189,6 +207,7 @@
   const DEFAULT_ID = '2575121';
   const DEFAULT_CLAN = 'TRSGS';
   const POLL_MS = 30000;
+  const HISTORY_CARDS = 2; // partidas anteriores que se muestran debajo de la principal
   const AOE_COLORS = {1:'#405BFF',2:'#FF0000',3:'#00FF00',4:'#FFFF00',5:'#00FFFF',6:'#FF57B3',7:'#797979',8:'#FF9600'};
 
   const $ = s => document.querySelector(s);
@@ -294,50 +313,120 @@
   // El nombre de un jugador lleva a su partida acá mismo (ver peek).
   const playerLink = (id, html) => `<a href="?id=${esc(encodeURIComponent(id))}#rival" data-player="${esc(id)}">${html}</a>`;
 
-  function rivalCard(p, me, m) {
-    const d = rm1v1(p.profileId), mine = me && rm1v1(me.profileId);
-    const elo = d?.rating ?? (d?.none ? '—' : '…');
-    let diffTxt = d?.none ? 'sin RM 1v1' : 'RM 1v1';
-    if (d?.rating != null && mine?.rating != null) {
-      const diff = d.rating - mine.rating;
-      diffTxt = diff > 0 ? `<span class="up">+${diff} vs ${esc(me.name)}</span>` : diff < 0 ? `<span class="down">−${-diff} vs ${esc(me.name)}</span>` : `igual que ${esc(me.name)}`;
+  // ---------- duelos: cada equipo ordenado por rating, el más fuerte contra el más fuerte ----------
+  let ratingMode = store('aoe2-rating') === 'tg' ? 'tg' : '1v1';
+  const fmtN = x => Number(x).toLocaleString(LANG, { useGrouping: 'always' });
+  const sgn = d => d > 0 ? '+' + d : d < 0 ? '−' + -d : '0';
+  const CROWN = '<svg class="crown" viewBox="0 0 24 24" role="img" aria-label="MVP"><path d="M3 19 2 7l5 4 5-7 5 7 5-4-1 12Z" fill="currentColor"/></svg>';
+
+  // Rating a mostrar: un número, null si el jugador no tiene, o undefined si todavía se está cargando.
+  function ratingFor(p, m) {
+    if (ratingMode === '1v1') {
+      const d = rm1v1(p.profileId);
+      if (d === undefined) return is1v1Match(m) && p.rating != null ? p.rating : undefined;
+      return d.rating ?? null;
     }
-    const games = d ? (d.wins + d.losses) : 0;
-    const n = x => Number(x).toLocaleString(LANG, { useGrouping: 'always' });
-    const rank = d?.rank > 0 ? `puesto ${n(d.rank)}${d.total > 0 ? ` de ${n(d.total)}` : ''}` : '';
-    // La racha viene con signo (+ victorias, − derrotas). Si no está activo en el ranking, es vieja: no se muestra.
-    const run = d?.active ? Math.abs(d.streak || 0) : 0;
-    const streak = !run ? '' : run === 1 ? (d.streak > 0 ? 'ganó la última' : 'perdió la última') : `${run} ${d.streak > 0 ? 'victorias' : 'derrotas'} seguidas`;
-    const cc = (p.country || '').toLowerCase();
-    const pc = color(p);
-    return `
-      <article class="rival" ${pc ? `style="--pc:${esc(pc)}"` : ''}>
-        <div class="band"></div>
-        <div class="inner">
-          ${p.civImageUrl ? `<img class="civimg" src="${esc(p.civImageUrl)}" alt="">` : '<span class="civimg"></span>'}
-          <h1>${playerLink(p.profileId, esc(p.name || 'Jugador ' + p.profileId))} <span class="pid">(${esc(p.profileId)})</span></h1>
-          <div class="elo"><small>1v1</small>${elo}</div>
-          <div class="meta">
-            <span class="civname">${esc(p.civName || p.civ || '?')}</span>
-            ${cc ? `<span><img class="flag" src="https://flagcdn.com/w40/${esc(cc)}.png" alt="" onerror="this.remove()">${esc(cc.toUpperCase())}</span>` : ''}
-            ${games ? `<span>${Math.round(100 * d.wins / games)}% de ${games} en 1v1</span>` : ''}
-            ${streak ? `<span>${streak}</span>` : ''}
-            ${d?.max ? `<span>máx ${d.max}</span>` : ''}
-            ${rank ? `<span>${rank}</span>` : ''}
-            ${!is1v1Match(m) && p.rating != null ? `<span>esta partida ${p.rating}</span>` : ''}
-            <a href="https://www.aoe2companion.com/profile/${esc(p.profileId)}" target="_blank" rel="noopener">companion</a>
-            <a href="https://www.aoe2insights.com/user/${esc(p.profileId)}/" target="_blank" rel="noopener">insights</a>
-          </div>
-          <div class="diff">${diffTxt}</div>
-        </div>
-      </article>`;
+    if (!is1v1Match(m) && p.rating != null) return p.rating; // el que tenía en esa partida
+    const d = profiles.get(String(p.profileId))?.data;
+    return d === undefined ? undefined : (d.team?.rating ?? null);
   }
 
-  const line = p => {
-    const d = rm1v1(p.profileId);
-    const name = isMe(p) ? esc(p.name) : playerLink(p.profileId, esc(p.name));
-    return `<div><span class="swatch" style="--pc:${esc(color(p) || '')}"></span><strong>${name}</strong> <span class="pid">(${esc(p.profileId)})</span>, RM 1v1 ${d?.rating ?? (d?.none ? '—' : '…')}, ${esc(p.civName || p.civ || '?')}</div>`;
+  // Score y eAPM: la API de aoe2companion no los trae hoy (los nombres de abajo son una suposición). Si algún día
+  // vienen en el jugador se muestran solos, y el de mayor score de la partida lleva la corona de MVP.
+  const numOrNull = v => v == null || v === '' || !Number.isFinite(Number(v)) ? null : Number(v);
+  const statsOf = p => ({
+    score: numOrNull(p.score ?? p.stats?.score),
+    eapm: numOrNull(p.eapm ?? p.stats?.eapm ?? p.apm ?? p.stats?.apm),
+  });
+
+  const rankSide = (ps, m) => ps
+    .map(p => ({ p, v: ratingFor(p, m), st: statsOf(p) }))
+    .sort((a, b) => (b.v ?? -1) - (a.v ?? -1));
+  const mean = xs => {
+    const v = xs.map(x => x.v).filter(x => typeof x === 'number');
+    return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
   };
+
+  function idCell(x, side, top) {
+    if (!x) return `<div class="d-id d-${side}"></div>`;
+    const p = x.p, pc = color(p);
+    const img = p.civImageUrl ? `<img class="d-civ" src="${esc(p.civImageUrl)}" alt="">` : '<span class="d-civ"></span>';
+    const label = esc(p.name || 'Jugador ' + p.profileId);
+    const name = isMe(p) ? `<span class="d-name me">${label}</span>` : `<span class="d-name">${playerLink(p.profileId, label)}</span>`;
+    const mvp = top && top.p === p ? CROWN : '';
+    const sub = [p.civName || p.civ, x.st.score != null ? `${fmtN(x.st.score)} pts` : '', x.st.eapm != null ? `${Math.round(x.st.eapm)} eAPM` : '']
+      .filter(Boolean).join(' · ');
+    return `<div class="d-id d-${side}"${pc ? ` style="--pc:${esc(pc)}"` : ''}>
+      <div class="d-top">${side === 'l' ? img + name + mvp : mvp + name + img}</div>
+      <div class="d-sub">${esc(sub)}</div>
+    </div>`;
+  }
+
+  function barCell(x, side, pct) {
+    if (!x) return `<div class="d-track d-${side}"></div>`;
+    const ok = typeof x.v === 'number';
+    return `<div class="d-track d-${side}"><div class="d-bar${ok ? '' : ' na'}" style="width:${ok ? pct(x.v).toFixed(1) : 0}%">${ok ? x.v : x.v === undefined ? '…' : '—'}</div></div>`;
+  }
+
+  const chipHtml = d => d == null ? '' : `<span class="dchip ${d >= 0 ? 'pos' : 'neg'}">${sgn(d)}</span>`;
+
+  function matchHead(m, live, label) {
+    const { me } = split(m);
+    const mode = m.leaderboardName || m.gameModeName || 'Partida';
+    const chip = live ? '<span class="chip live">Jugando ahora</span>'
+      : me?.won === true ? '<span class="chip win">Victoria</span>'
+      : me?.won === false ? '<span class="chip loss">Derrota</span>'
+      : '<span class="chip none">Sin resultado</span>';
+    const time = live
+      ? `<span><span id="elapsed">${clock(Date.now() - new Date(m.started))}</span> desde que arrancó</span>`
+      : m.finished ? `<span>${clock(new Date(m.finished) - new Date(m.started))} de partida, terminó ${ago(m.finished)}</span>`
+      : `<span>empezó ${ago(m.started)}</span>`;
+    const action = live
+      ? `<a class="live" href="aoe2de://1/${esc(m.matchId)}" title="Abre el juego para mirarla como espectador">${EYE}Ver en el juego</a>`
+      : recLink(m, label);
+    return `<div class="mhead">
+      ${m.mapImageUrl ? `<img class="mapimg" src="${esc(m.mapImageUrl)}" alt="">` : '<div class="mapimg"></div>'}
+      <div class="mtitle">
+        <h2 class="mapname">${esc(m.mapName || m.map || 'Mapa desconocido')}</h2>
+        <div class="modes"><span>${esc(mode)}</span>${live && m.server ? `<span>Servidor ${esc(m.server)}</span>` : ''}${time}</div>
+      </div>
+      ${chip}${action}
+    </div>`;
+  }
+
+  // entries: [{ m, live }]. Todas las tarjetas comparten la misma escala de barras, así se pueden comparar entre sí.
+  function duelCards(entries) {
+    const sides = entries.map(({ m }) => {
+      const { me, allies, rivals } = split(m);
+      return { L: rankSide([me, ...allies].filter(Boolean), m), R: rankSide(rivals, m) };
+    });
+    const vals = sides.flatMap(s => [...s.L, ...s.R]).map(x => x.v).filter(v => typeof v === 'number');
+    const lo = vals.length ? Math.floor((Math.min(...vals) - 150) / 50) * 50 : 0;
+    const hi = vals.length ? Math.ceil(Math.max(...vals) / 50) * 50 : 1;
+    const pct = v => Math.max(0, Math.min(100, 100 * (v - lo) / (hi - lo)));
+
+    return entries.map(({ m, live }, i) => {
+      const { L, R } = sides[i];
+      const scored = [...L, ...R].filter(x => x.st.score != null);
+      const top = scored.length ? scored.reduce((a, b) => b.st.score > a.st.score ? b : a) : null;
+      const aL = mean(L), aR = mean(R);
+      const avg = aL != null && aR != null
+        ? `<div class="d-avg"><span class="sp"></span><span class="a l">${Math.round(aL)}</span><span class="d-vs">${chipHtml(Math.round(aL - aR))}</span><span class="a r">${Math.round(aR)}</span><span class="sp"></span></div>`
+        : '';
+      let rows = '';
+      for (let k = 0; k < Math.max(L.length, R.length); k++) {
+        const a = L[k], b = R[k];
+        const d = a && b && typeof a.v === 'number' && typeof b.v === 'number' ? a.v - b.v : null;
+        rows += `<div class="d-row">
+          ${idCell(a, 'l', top)}${barCell(a, 'l', pct)}<div class="d-vs">${chipHtml(d)}</div>${barCell(b, 'r', pct)}${idCell(b, 'r', top)}
+        </div>`;
+      }
+      return `<article class="match">
+        ${matchHead(m, live, i === 0 ? 'Descargar rec' : 'rec')}
+        <div class="duel"><div class="dgrid">${avg}${rows}</div></div>
+      </article>`;
+    }).join('');
+  }
 
   let picking = false; // mostrando resultados de búsqueda
   function render(m, live, src) {
@@ -345,36 +434,13 @@
     const isNew = !current || current.match.matchId !== m.matchId || (live && !current.live);
     if (live && isNew && current) chime(); // arrancó una partida del jugador que ya se estaba mirando
     current = { match: m, live, src };
-    const { me, allies, rivals } = split(m);
-    loadProfiles(players(m).map(p => p.profileId));
-    const mode = m.leaderboardName || m.gameModeName || 'Partida';
-    let result = '';
-    if (!live && me) result = me.won === true ? '<span class="result win">Victoria</span>'
-      : me.won === false ? '<span class="result loss">Derrota</span>' : '<span>Sin resultado todavía</span>';
+    const { rivals } = split(m);
+    // Las partidas anteriores se muestran con el mismo formato de duelo.
+    const older = hist.id === profileId ? hist.matches.filter(x => x.matchId !== m.matchId).slice(0, HISTORY_CARDS) : [];
+    loadProfiles([...new Set([m, ...older].flatMap(x => players(x).map(p => p.profileId)))]);
 
     $('#scene').className = 'scene ' + (live ? 'live' : 'past');
-    $('#scene').innerHTML = `
-      <span class="state ${live ? 'live' : 'past'}">${live ? 'Jugando ahora' : 'Última partida'}</span>
-      <div class="head">
-        ${m.mapImageUrl ? `<img class="mapimg" src="${esc(m.mapImageUrl)}" alt="">` : '<div class="mapimg"></div>'}
-        <div>
-          <h2 class="mapname">${esc(m.mapName || m.map || 'Mapa desconocido')}</h2>
-          <div class="modes"><span>${esc(mode)}</span>${m.server ? `<span>Servidor ${esc(m.server)}</span>` : ''}${result}${live
-            ? `<a class="live" href="aoe2de://1/${esc(m.matchId)}" title="Abre el juego para mirarla como espectador">${EYE}Ver en el juego</a>`
-            : recLink(m, 'Descargar rec')}</div>
-        </div>
-        <div class="clock">${live
-          ? `<b id="elapsed">${clock(Date.now() - new Date(m.started))}</b><span>desde que arrancó</span>`
-          : `<b>${m.finished ? clock(new Date(m.finished) - new Date(m.started)) : '—'}</b><span>${m.finished ? 'de partida, terminó ' + ago(m.finished) : 'empezó ' + ago(m.started)}</span>`}</div>
-      </div>
-      <div class="rivals ${rivals.length === 1 ? 'solo' : ''} ${isNew && live ? 'enter' : ''}">
-        ${rivals.length ? rivals.map(p => rivalCard(p, me, m)).join('') : '<div class="note"><p>No hay rivales en esta partida.</p></div>'}
-      </div>
-      <div class="side">
-        ${me ? line(me) : ''}
-        ${allies.map(line).join('')}
-      </div>
-      ${live ? '' : historyHtml(m)}`;
+    $('#scene').innerHTML = `<div class="duels ${isNew && live ? 'enter' : ''}">${duelCards([{ m, live }, ...older.map(x => ({ m: x, live: false }))])}</div>`;
 
     document.title = live && rivals.length
       ? `⚔ ${rivals.map(p => `${p.name} (${rm1v1(p.profileId)?.rating ?? p.rating ?? '?'})`).join(', ')}`
@@ -423,6 +489,18 @@
   });
   paintBell();
 
+  // ---------- rating a comparar: 1v1 o Team Game ----------
+  const paintSeg = () => document.querySelectorAll('#ratingSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === ratingMode));
+  $('#ratingSeg').addEventListener('click', e => {
+    const b = e.target.closest('button[data-mode]');
+    if (!b || b.dataset.mode === ratingMode) return;
+    ratingMode = b.dataset.mode;
+    store('aoe2-rating', ratingMode);
+    paintSeg();
+    if (current) render(current.match, current.live, current.src);
+  });
+  paintSeg();
+
   // ---------- REST: última partida (y respaldo si el websocket falla) ----------
   async function loadLast() {
     if (picking) return;
@@ -431,7 +509,7 @@
       const r = await fetch(url);
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const m = camel(await r.json()).matches?.[0];
-      if (m && !stillRunning(m)) loadHistory(m);
+      if (m) loadHistory(m);
       if (current?.live && current.src === 'ws') return; // el socket manda mientras hay partida en vivo
       if (!m) return renderNote('Sin partidas', '<p>No hay partidas registradas para ese Profile ID. Revisá el número.</p>');
       render(m, stillRunning(m), 'rest');
@@ -457,33 +535,10 @@
       const res = await getJson(`${API}/matches?profile_ids=${encodeURIComponent(id)}&use_enums=true&page=1&per_page=10&language=${LANG}`);
       if (id !== profileId || hist.key !== key) return; // cambiaron de jugador o ya se pidió uno más nuevo
       hist.matches = res.matches || [];
-      if (current && !current.live) render(current.match, false, current.src);
+      if (current) render(current.match, current.live, current.src);
     } catch { if (hist.key === key) hist.key = ''; } // si falla, reintenta con el próximo sondeo
   }
 
-  function historyHtml(shown) {
-    const rows = hist.id === profileId ? hist.matches.filter(m => m.matchId !== shown.matchId) : [];
-    if (!rows.length) return '';
-    return `
-      <section class="history">
-        <span class="state past">Partidas anteriores</span>
-        <ol>${rows.map(m => {
-          const { me, allies, rivals } = split(m);
-          const vs = rivals.length === 1 ? `vs ${esc(rivals[0].name)} (${esc(rivals[0].civName || '?')})`
-            : allies.length ? `en ${allies.length + 1}v${rivals.length}` : `entre ${rivals.length + 1} jugadores`;
-          const diff = Number(me?.ratingDiff);
-          return `<li>
-            ${me?.won === true ? '<span class="result win">Victoria</span>' : me?.won === false ? '<span class="result loss">Derrota</span>' : '<span>Sin resultado</span>'}
-            <span>${esc(m.mapName || m.map || '?')}</span>
-            <span>${esc(m.leaderboardName || m.gameModeName || '')}</span>
-            <span>${esc(me?.civName || '?')} ${vs}</span>
-            ${diff ? `<span>${diff > 0 ? '+' + diff : '−' + -diff}</span>` : ''}
-            <span>${ago(m.finished || m.started)}</span>
-            ${recLink(m, 'rec')}
-          </li>`;
-        }).join('')}</ol>
-      </section>`;
-  }
 
   // ---------- grabaciones (recs) de las partidas terminadas ----------
   // Microsoft guarda unos meses la grabación de cada jugador. aoe.ms/replay redirige a esta dirección, pero la
@@ -840,6 +895,7 @@
     view = v === 'clan' ? 'clan' : 'rival';
     $('#scene').hidden = view !== 'rival';
     $('#who').hidden = view !== 'rival';
+    $('#ratingSeg').hidden = view !== 'rival';
     $('#clanView').hidden = view !== 'clan';
     $('#clanForm').hidden = view !== 'clan';
     document.querySelectorAll('.tabs a').forEach(a => a.setAttribute('aria-current', a.dataset.view === view ? 'page' : 'false'));

@@ -6,21 +6,16 @@ Muestra en tiempo real contra quién estás jugando en **Age of Empires II: Defi
 
 ## Qué muestra
 
-**Mientras jugás**
-- Cada rival con su nombre, profile ID y color de jugador.
-- Su ELO de RM 1v1 y la diferencia con el del jugador seguido (por ejemplo `+24 vs Mysa_`).
-- Su civilización, país, winrate y cantidad de partidas en 1v1, ELO máximo y el rating del modo que se está jugando.
-- Su puesto en el ranking de 1v1 (por ejemplo `puesto 12.345 de 46.419`) y, si está activo en ese ranking, su racha actual (`3 victorias seguidas`).
-- Links a su perfil en aoe2companion y aoe2insights.
-- El mapa, el modo, el servidor y el tiempo transcurrido desde que arrancó la partida.
-- **Ver en el juego**: abre la partida en Age of Empires II para mirarla como espectador.
-- El equipo del jugador seguido, con profile ID, ELO de 1v1 y civilización.
+Cada partida es una tarjeta con el mismo formato: tu equipo a la izquierda y los rivales a la derecha, cada uno ordenado por rating y emparejando al más fuerte con el más fuerte. Las barras crecen desde el centro, y entre cada par aparece la diferencia (tu jugador menos su rival directo). Arriba de las barras va el promedio de cada equipo.
+
+- El selector **1v1 / Team Game**, arriba, cambia el rating de todas las tarjetas a la vez y se guarda en el navegador. En 1v1 se muestra el RM 1v1 actual de cada jugador; en Team Game, el rating que tenía en esa partida. Todas las barras usan la misma escala.
+- Cada jugador lleva el ícono de su civilización con el color de jugador, su nombre y la civilización. Tocando el nombre se abre la partida de ese jugador.
+- La primera tarjeta es la partida en curso (**Jugando ahora**, con el tiempo transcurrido y **Ver en el juego**, que la abre en Age of Empires II como espectador) o, si no estás jugando, la última partida con su resultado y duración.
+- Debajo van las dos partidas anteriores con el mismo formato (resultado, mapa, duración y hace cuánto).
+- La grabación (rec) de cada partida terminada, para descargar: un `.zip` con el archivo `.aoe2record`. Microsoft las guarda unos meses; si ya no está, el link avisa **No disponible**.
 - En la pestaña del navegador aparece `⚔ Rival (ELO)`, así se ve sin cambiar de ventana.
 
-**Cuando no estás en partida**
-- La última partida, con el resultado (victoria o derrota) y cuánto duró.
-- Las partidas anteriores del jugador seguido: resultado, mapa, modo, civilización, rival, ELO ganado o perdido y hace cuánto se jugó.
-- La grabación (rec) de la última partida y de las anteriores, para descargar: un `.zip` con el archivo `.aoe2record`. Microsoft las guarda unos meses; si ya no está, el link avisa **No disponible**.
+El score, el eAPM y el MVP todavía no se muestran: la API de aoe2companion no los trae y habría que sacarlos del archivo de la partida (rec).
 
 **Sección Clan** (`#clan`)
 - Todos los integrantes de un clan con su ELO de RM 1v1 y de TG, país y profile ID.
@@ -35,7 +30,7 @@ Muestra en tiempo real contra quién estás jugando en **Age of Empires II: Defi
 2. En el campo **Jugador** escribí el nombre o el profile ID y tocá **Ver**. Si el nombre coincide con varios jugadores, aparece una lista para elegir. También se puede pasar el ID directo en la URL con `?id=PROFILE_ID`.
 3. Dejala abierta: cuando arranca una partida, la pantalla se actualiza sola.
 
-Tocando la tarjeta de un rival o el nombre de cualquier jugador, en una partida o en la sección Clan, se abre su partida: la que está jugando o la última. Con **Atrás** se vuelve al jugador anterior.
+Tocando el nombre de cualquier jugador, en una partida o en la sección Clan, se abre su partida: la que está jugando o la última. Con **Atrás** se vuelve al jugador anterior.
 
 El Profile ID se guarda en tu navegador, así que la próxima vez ya aparece cargado. Abrir a otro jugador así no cambia el guardado: eso se hace desde el campo **Jugador**.
 
@@ -54,7 +49,7 @@ Es un único `index.html`, sin dependencias ni backend. Todas las consultas las 
 | Partidas en curso | `wss://socket.aoe2companion.com/listen?handler=ongoing-matches&profile_ids=…` | En tiempo real (WebSocket) |
 | Última partida | `GET https://data.aoe2companion.com/api/matches?profile_ids=…&per_page=1` | Al abrir y cada 30 s como respaldo |
 | Partidas anteriores | `GET https://data.aoe2companion.com/api/matches?profile_ids=…&per_page=10` | Al abrir y cuando termina una partida |
-| ELO de RM 1v1 | `GET https://data.aoe2companion.com/api/profiles/{id}` | Por jugador, con caché de 10 min |
+| ELO de RM 1v1 y de Team Game | `GET https://data.aoe2companion.com/api/profiles/{id}` | Por jugador, con caché de 10 min |
 | Búsqueda por nombre | `GET https://data.aoe2companion.com/api/profiles?search=NOMBRE` | Al buscar un jugador por nombre |
 | Integrantes de un clan | `GET https://data.aoe2companion.com/api/profiles?clan=TAG` | Al abrir la sección Clan y cada 5 min |
 | ELO del clan | `GET https://data.aoe2companion.com/api/leaderboards/rm_1v1?clan=TAG` (y `rm_team`) | Al abrir la sección Clan y cada 5 min |
