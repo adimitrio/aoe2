@@ -87,13 +87,15 @@
   .d-id.d-r{text-align:right}
   .d-top{display:flex;align-items:center;gap:8px;min-width:0}
   .d-id.d-r .d-top{justify-content:flex-end}
-  .d-civ{width:34px;height:34px;flex:none;border-radius:50%;border:2px solid var(--pc,var(--line));background:var(--stone);object-fit:cover}
+  .d-civ{width:40px;height:40px;flex:none;border-radius:50%;border:2px solid var(--pc,var(--line));background:var(--stone);object-fit:cover}
+  .d-flag{height:16px;width:auto;flex:none;border-radius:2px}
   .d-name{font:500 18px/1.2 var(--body);overflow-wrap:anywhere;min-width:0}
   .d-name.me{font-weight:700;color:var(--gold)}
   .crown{width:18px;height:18px;flex:none;color:var(--gold)}
-  .d-sub{color:var(--ash);font-size:13px;font-variant-numeric:tabular-nums}
-  .d-id.d-l .d-sub{margin:1px 0 0 42px}
-  .d-id.d-r .d-sub{margin:1px 42px 0 0}
+  .d-sub{color:var(--ash);font-size:15px;font-variant-numeric:tabular-nums}
+  .d-sub .cv{color:var(--bone);font-weight:600}
+  .d-id.d-l .d-sub{margin:1px 0 0 48px}
+  .d-id.d-r .d-sub{margin:1px 48px 0 0}
   .d-track{height:36px;background:var(--stone);display:flex}
   .d-track.d-l{justify-content:flex-end;border-radius:8px 0 0 8px}
   .d-track.d-r{justify-content:flex-start;border-radius:0 8px 8px 0}
@@ -109,8 +111,8 @@
     .d-avg{grid-template-columns:minmax(0,1fr) 56px minmax(0,1fr)}
     .d-avg .sp{display:none}
     .d-name{font-size:16px}
-    .d-civ{width:28px;height:28px}
-    .d-id.d-l .d-sub{margin-left:36px}
+    .d-civ{width:32px;height:32px}
+    .d-id.d-l .d-sub{margin-left:40px}
     .d-id.d-r .d-sub{margin-right:36px}
   }
 
@@ -298,7 +300,7 @@
             const lb = lbs.find(test);
             return lb ? { rating: lb.rating, max: lb.maxRating, wins: lb.wins ?? 0, losses: lb.losses ?? 0, rank: lb.rank, total: lb.total, streak: lb.streak, active: lb.active, last: lb.lastMatchTime } : null;
           };
-          entry.data = { rm1v1: pick(isRm1v1), team: pick(isRmTeam) };
+          entry.data = { rm1v1: pick(isRm1v1), team: pick(isRmTeam), country: camel(j).country || null };
         })
         .catch(() => { entry.at = Date.now() - PROFILE_TTL + 60e3; }) // si falla, reintenta en 1 min
         .finally(() => { entry.loading = false; });
@@ -351,14 +353,17 @@
     if (!x) return `<div class="d-id d-${side}"></div>`;
     const p = x.p, pc = color(p);
     const img = p.civImageUrl ? `<img class="d-civ" src="${esc(p.civImageUrl)}" alt="">` : '<span class="d-civ"></span>';
+    const cc = String(p.country || profiles.get(String(p.profileId))?.data?.country || '').toLowerCase();
+    const flag = cc ? `<img class="d-flag" src="https://flagcdn.com/w40/${esc(cc)}.png" alt="${esc(cc.toUpperCase())}" title="${esc(cc.toUpperCase())}" onerror="this.remove()">` : '';
     const label = esc(p.name || 'Jugador ' + p.profileId);
     const name = isMe(p) ? `<span class="d-name me">${label}</span>` : `<span class="d-name">${playerLink(p.profileId, label)}</span>`;
     const mvp = top && top.p === p ? CROWN : '';
-    const sub = [p.civName || p.civ, x.st.score != null ? `${fmtN(x.st.score)} pts` : '', x.st.eapm != null ? `${Math.round(x.st.eapm)} eAPM` : '']
+    const civ = p.civName || p.civ;
+    const sub = [cc ? esc(cc.toUpperCase()) : '', civ ? `<span class="cv">${esc(civ)}</span>` : '', x.st.score != null ? `${fmtN(x.st.score)} pts` : '', x.st.eapm != null ? `${Math.round(x.st.eapm)} eAPM` : '']
       .filter(Boolean).join(' · ');
     return `<div class="d-id d-${side}"${pc ? ` style="--pc:${esc(pc)}"` : ''}>
-      <div class="d-top">${side === 'l' ? img + name + mvp : mvp + name + img}</div>
-      <div class="d-sub">${esc(sub)}</div>
+      <div class="d-top">${side === 'l' ? img + flag + name + mvp : mvp + name + flag + img}</div>
+      <div class="d-sub">${sub}</div>
     </div>`;
   }
 
